@@ -1,27 +1,44 @@
 \section*{Variables and constraints}
 \subsection*{Input data}
-$ \vec{Me} $ is a square matrix containing the number of students in conflit among two exams. More precisely, $ Me_{ij} $ contains the number of students in conflit among the exam $i$ and $j$. It is built directly from the input data.
+$ \vec{Me} $ is a $ n \times n $ matrix, where $ n = |E| $ is the total number of exams, containing the number of students in conflit among two exams. More precisely, $ Me_{ij} $ contains the number of students in conflit among the exam $i$ and the exam $j$, where $ i, j \in \mathbb{N}, 1 \le i \le |E|, 1 \le j \le |E| $.
 \newline
-$ |S| $ is the total number of students.
+$ \vec{Me} $ is built directly from the input data.
+\newline
+$ |S| $ is the total number of enrolled students.
 
 \subsection*{Variables}
-$ \vec{p} $ is a vector containing the penalty associated to exams. More precisely, $ p_{k} $ contains the penalty value of exams at distance $k$.
+$ \vec{p} $ is a vector containing the penalty value associated to exams. More precisely, $ p_{k} $ contains the penalty weight associated to exams which are $k$ timeslots far, where $ k \in \mathbb{N}, 1 \le k \le 5 $. Hence $p_{k} = 2^{k}$.
 \newline
-$ \vec{y} $ is a 3d matrix containing the information about conflicts at a precise distance. More precisely, 
+$ \vec{y} $ is a 3d matrix containing the information about conflicts at a certain distance. More precisely, 
 \[
 y_{ijk} = 
 \begin{cases}
-1	&	\text{if exams $ i $ and $ j $ are a distance $ k $}	\\
+1	&	\text{if exams $ i $ and $ j $ are $k$ timeslot far}	\\
 0	&	\text{otherwise}
 \end{cases}
 \]
 
 \subsection*{Output data}
-$ \vec{x} $ is a vector containing the number of the timeslot assigned to an exam. More precisely, $ x_{i} $ contains the timeslot assigned to exam $i$.
+$ \vec{x} $ is a vector containing the number of the timeslot assigned to an exam. More precisely, $ x_{i} $ contains the number of the timeslot assigned to the exam $i$.
 
 \subsection*{Constraints}
 $ Me_{ij} > 0 $ means that there are some students that can not substain the same exam in the same timeslot. Hence, it is needed to force $ x_{i} \ne x_{j} $.
-In order to express this condition, it is necessary to introduce two new variables and generate the following constraints:
+In order to express this condition, it is necessary to introduce two new variables
+\[
+l_{ij} = 
+\begin{cases}
+1	&	Me_{ij} > 0	\\
+0	&	\text{otherwise}
+\end{cases}
+\]
+\[
+q_{ij} = 
+\begin{cases}
+1	&	x_{i} \ne x_{j}	\\
+0	&	\text{otherwise}
+\end{cases}
+\]
+and to generate the following constraints:
 \begin{gather*}
 Me_{ij} \le M l_{ij} \qquad Me_{ij} \ge m l_{ij} \\
 x_{i} - x_{j} \ge m q_{ij} \qquad x_{i} - x_{j} \le M q_{ij} \\
@@ -30,16 +47,16 @@ l_{ij} \le q_{ij}
 \newline
 It is needed to activate the proper $ y_{ijk} $ in order to represent the correct couple of exams in conflict at a certain distance.
 \newline
-$ x_{i} - x_{j} = k $ means that exam $i$ and exam $j$ are $k$ slots far. Hence, it is needed to force $ y_{ijk} = 1 $ with $ k \in \mathbb{N}, 1 \le k \le 5 $.
+$ x_{i} - x_{j} = k $ means that exam $i$ and exam $j$ are $k$ slots far. Hence, it is needed to force $ y_{ijk} = 1 $ where $ k \in \mathbb{N}, 1 \le k \le 5 $.
 In order to express this condition, it is necessary to introduce two different blocks of constraints.
 
-The first one, force $ y_{ijk} = 0 $ when $ x_{i} - x_{j} \ne k $ in order to "facilitate" the minimization of the objective function.
+The first one forces $ y_{ijk} = 0 $ when $ x_{i} - x_{j} \ne k $ in order to "facilitate" the minimization of the objective function.
 \begin{gather*}
 k - (x_{i} - x_{j}) \le M (1-y_{ijk}) \\
 (x_{i} - x_{j}) - k \le M (1-y_{ijk})
 \end{gather*}
 
-The second one, force $ y_{ijk} = 1 $ when $ x_{i} - x_{j} = k $.
+The second one forces $ y_{ijk} = 1 $ when $ x_{i} - x_{j} = k $.
 In order to express this constrains it is needed to introduce two more boolean variables, $ y_{ijk, I} $ and $ y_{ijk, II} $.
 \begin{gather}
 \label{eqn:1}
@@ -65,4 +82,4 @@ y_{ijk, II} =
 0	&	\text{otherwise}
 \end{cases}
 \]
-Finally, the relation \ref{eqn:3} force $ y_{ijk} = 1 $ only if $ y_{ijk, I} = 1 $ and $ y_{ijk, II} = 1 $, that represents the situation in which $ x_{i} - x_{j} = k $.
+Finally, the relation \ref{eqn:3} forces $ y_{ijk} = 1 $ only if $ y_{ijk, I} = 1 $ and $ y_{ijk, II} = 1 $, that represents the situation in which $ x_{i} - x_{j} = k $.
