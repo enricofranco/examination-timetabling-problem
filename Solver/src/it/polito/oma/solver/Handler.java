@@ -11,17 +11,27 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	
+	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
 	private int examsNumber;
+	
+	//Students
 	private Map<Integer, Student> students = new HashMap<>();
 	private int studentsNumber;
+	
+	//Timeslots
 	private int numberTimeslot;
 	
+	//Obj function parameters
 	private int mutualExclusion[][];
 	private int penalty[] = new int[PENALTIES];
 	private int y[][][];
 	private int solution[];	
 	
+	/**
+	 * This method loads all the instances into local variables.
+	 * @param path The path of all the files to load
+	 */
 	public void loadInstance(String path) {
 		try {
 			loadExams(path + ".exm");
@@ -33,6 +43,12 @@ public class Handler {
 		}
 	}
 	
+	/**
+	 * This method loads all the exams into a local variable.
+	 * @param path The path of .exm file
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	private void loadExams(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
@@ -46,6 +62,12 @@ public class Handler {
 		examsNumber = exams.size();
 	}
 	
+	/**
+	 * This method loads all the timeslots into a local variable.
+	 * @param path The path of .slo file
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	private void loadTimeslot(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
@@ -56,6 +78,12 @@ public class Handler {
 		}
 	}
 
+	/**
+	 * This method loads all the students into a local variable.
+	 * @param path The path of .stu file
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	private void loadStudents(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
@@ -75,6 +103,9 @@ public class Handler {
 		studentsNumber = students.size();
 	}
 	
+	/**
+	 * This method initializes the vectors used by the objective function.
+	 */
 	public void initialize() {
 		mutualExclusion = new int[examsNumber][examsNumber];
 		y = new int[examsNumber][examsNumber][PENALTIES];
@@ -93,7 +124,7 @@ public class Handler {
 //			System.out.println();
 //		}
 		
-		/** Test instance solution */
+		/* Test instance solution */
 		solution[0] = 1;
 		solution[1] = 3;
 		solution[2] = 6;
@@ -106,11 +137,19 @@ public class Handler {
 			System.out.println("Unfeasible solution");
 	}
 	
+	/**
+	 * This method set the penalties vector, due to the mutual distance
+	 * between two exams.
+	 */
 	private void setPenalties() {
 		for(int k = 0; k < PENALTIES; ++k)
 			penalty[k] = (int) Math.pow(BASE_PENALTY, 5-(k+1));
 	}
 	
+	/**
+	 * This method builds the matrix of mutual
+	 * exclusion due to the conflict between students.
+	 */
 	private void buildMutualExclusionMatrix() {
 		students.values().stream()
 			.map(Student::getExams)
@@ -124,7 +163,10 @@ public class Handler {
 			});
 	}
 
-	
+	/**
+	 * This method builds the mutual distances between two exams and check
+	 * the possibility of penalties due to the little distance.
+	 */
 	private void buildDistancies() {
 		for(int i = 0; i < examsNumber; ++i) {
 			for(int j = 0; j < examsNumber; ++j) {
@@ -137,6 +179,10 @@ public class Handler {
 		}		
 	}
 	
+	/**
+	 * This method check the feasibility of the founded solution.
+	 * @return true if the solution is feasible, false otherwise.
+	 */
 	public boolean checkFeasibility() {
 		for(int i = 0; i < examsNumber; ++i)
 			for(int j = 0; j < examsNumber; ++j)
@@ -145,6 +191,10 @@ public class Handler {
 		return true;
 	}
 	
+	/**
+	 * This method describe the objective function and resolve it, with the current solution
+	 * @return result of the objective function.
+	 */
 	public double objectiveFunction() {
 		double obj = 0.0;
 		for(int i = 0; i < examsNumber; ++i) {
