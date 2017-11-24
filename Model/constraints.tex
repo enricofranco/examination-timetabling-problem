@@ -1,13 +1,19 @@
 \section*{Variables and constraints}
 \subsection*{Input data}
-$ \vec{Me} $ is a $ n \times n $ matrix, where $ n = |E| $ is the total number of exams, containing the number of students in conflit among two exams. More precisely, $ Me_{ij} $ contains the number of students in conflit among the exam $i$ and the exam $j$, where $ i, j \in \mathbb{N}, 1 \le i \le |E|, 1 \le j \le |E| $.
-\newline
-$ \vec{Me} $ is built directly from the input data.
+$ |E| $ is the total number of exams.
 \newline
 $ |S| $ is the total number of enrolled students.
+\newline
+$ |T| $ is the total number of available timeslots.
+\newline
+$ \vec{ns} $ is a $ n \times n $ matrix, where $ n = |E| $, containing the number of students in conflit among two exams. More precisely, $ ns_{ij} $ contains the number of students in conflit among the exam $i$ and the exam $j$.
+\newline
+$ ns_{ij} \in \mathbb{N} \quad i = 1, \dots , |E| \quad j = 1, \dots , |E| $.
+\newline
+$ \vec{ns} $ is built directly from the input data.
 
 \subsection*{Variables}
-$ \vec{p} $ is a vector containing the penalty value associated to exams. More precisely, $ p_{k} $ contains the penalty weight associated to exams which are $k$ timeslots far, where $ k \in \mathbb{N}, 1 \le k \le 5 $. Hence $p_{k} = 2^{k}$.
+$ \vec{p} $ is a vector containing the penalty value associated to exams. More precisely, $ p_{k} $ contains the penalty weight associated to exams which are $k$ timeslots far, where $ k \in \mathbb{N}, 1 \le k \le 5 $. Hence $p_{k} = 2^{5-k}$.
 \newline
 $ \vec{y} $ is a 3d matrix containing the information about conflicts at a certain distance. More precisely, 
 \[
@@ -19,15 +25,15 @@ y_{ijk} =
 \]
 
 \subsection*{Output data}
-$ \vec{x} $ is a vector containing the number of the timeslot assigned to an exam. More precisely, $ x_{i} $ contains the number of the timeslot assigned to the exam $i$.
+$ \vec{x} $ is a vector containing the number of the timeslot assigned to an exam. More precisely, $ x_{i} $ contains the number of the timeslot assigned to the exam $i$. Hence $ 1 \le x_{i} \le |T| $.
 
 \subsection*{Constraints}
-$ Me_{ij} > 0 $ means that there are some students that can not substain the same exam in the same timeslot. Hence, it is needed to force $ x_{i} \ne x_{j} $.
+$ ns_{ij} > 0 $ means that there are some students that can not substain the same exam in the same timeslot. Hence, it is needed to force $ x_{i} \ne x_{j} $.
 In order to express this condition, it is necessary to introduce two new variables
 \[
 l_{ij} = 
 \begin{cases}
-1	&	Me_{ij} > 0	\\
+1	&	ns_{ij} > 0	\\
 0	&	\text{otherwise}
 \end{cases}
 \]
@@ -40,7 +46,7 @@ q_{ij} =
 \]
 and to generate the following constraints:
 \begin{gather*}
-Me_{ij} \le M l_{ij} \qquad Me_{ij} \ge m l_{ij} \\
+ns_{ij} \le M l_{ij} \qquad ns_{ij} \ge m l_{ij} \\
 x_{i} - x_{j} \ge m q_{ij} \qquad x_{i} - x_{j} \le M q_{ij} \\
 l_{ij} \le q_{ij}
 \end{gather*}
@@ -62,10 +68,12 @@ In order to express this constrains it is needed to introduce two more boolean v
 \label{eqn:1}
 (x_{i} - x_{j}) - k - \epsilon \ge (m - \epsilon) y_{ijk, I} \\
 \label{eqn:2}
-(x_{i} - x_{j}) - k + \epsilon \ge (M + \epsilon) y_{ijk, II} \\
+(x_{i} - x_{j}) - k + \epsilon \le (M + \epsilon) y_{ijk, II} \\
 \label{eqn:3}
 y_{ijk, I} + y_{ijk, II} - 1 \le y_{ijk}
 \end{gather}
+being $ \epsilon < 1 $ an arbitrarily small positive quantity.
+
 With the relation \ref{eqn:1} the following constraint is expressed:
 \[
 y_{ijk, I} = 
