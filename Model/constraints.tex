@@ -6,14 +6,14 @@ $ |S| $ is the total number of enrolled students.
 \newline
 $ |T| $ is the total number of available timeslots.
 \newline
-$ \vec{ns} $ is a $ n \times n $ matrix, where $ n = |E| $, containing the number of students in conflit among two exams. More precisely, $ ns_{ij} $ contains the number of students in conflit among the exam $i$ and the exam $j$.
+$ \vec{ns} $ is a $ n \times n $ matrix, being $ n = |E| $, containing the number of students in conflit among two exams. More precisely, $ ns_{ij} $ contains the number of students in conflit among the exam $i$ and the exam $j$.
 \newline
 $ ns_{ij} \in \mathbb{N} \quad i = 1, \dots , |E| \quad j = 1, \dots , |E| $.
 \newline
 $ \vec{ns} $ is built directly from the input data.
 
 \subsection*{Variables}
-$ \vec{p} $ is a vector containing the penalty value associated to exams. More precisely, $ p_{k} $ contains the penalty weight associated to exams which are $k$ timeslots far, where $ k \in \mathbb{N}, 1 \le k \le 5 $. Hence $p_{k} = 2^{5-k}$.
+$ \vec{p} $ is a vector containing the penalty value associated to exams. More precisely, $ p_{k} $ contains the penalty weight associated to exams which are $k$ timeslots far, being $ k \in \mathbb{N}, 1 \le k \le 5 $. Hence $p_{k} = 2^{5-k}$.
 \newline
 $ \vec{y} $ is a 3d matrix containing the information about conflicts at a certain distance. More precisely, 
 \[
@@ -53,7 +53,7 @@ l_{ij} \le q_{ij}
 \newline
 It is needed to activate the proper $ y_{ijk} $ in order to represent the correct couple of exams in conflict at a certain distance.
 \newline
-$ x_{i} - x_{j} = k $ means that exam $i$ and exam $j$ are $k$ slots far. Hence, it is needed to force $ y_{ijk} = 1 $ where $ k \in \mathbb{N}, 1 \le k \le 5 $.
+$ x_{i} - x_{j} = k $ means that exam $i$ and exam $j$ are $k$ slots far. Hence, it is needed to force $ y_{ijk} = 1 $ being $ k \in \mathbb{N}, 1 \le k \le 5 $.
 In order to express this condition, it is necessary to introduce two different blocks of constraints.
 
 The first one forces $ y_{ijk} = 0 $ when $ x_{i} - x_{j} \ne k $ in order to "facilitate" the minimization of the objective function.
