@@ -13,20 +13,20 @@ public class Handler {
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
-	private int examsNumber;
+	private int E;
 	
 	//Students
 	private Map<Integer, Student> students = new HashMap<>();
-	private int studentsNumber;
+	private int S;
 	
 	//Timeslots
-	private int numberTimeslot;
+	private int T;
 	
 	//Obj function parameters
-	private int mutualExclusion[][];
-	private int penalty[] = new int[PENALTIES];
-	private int y[][][];
-	private int solution[];	
+	private int conflictWeight[][];
+	private int p[] = new int[PENALTIES];
+	private int conflict[][][];
+	private int etSol[];	
 	
 	/**
 	 * This method loads all the instances into local variables.
@@ -59,7 +59,7 @@ public class Handler {
 				exams.put(id, e);
 			});
 		}
-		examsNumber = exams.size();
+		E = exams.size();
 	}
 	
 	/**
@@ -73,7 +73,7 @@ public class Handler {
 			r.lines()
 			.map(l -> l.split(" "))
 			.forEach(i -> {
-				numberTimeslot = Integer.valueOf(i[0]);
+				T = Integer.valueOf(i[0]);
 			});
 		}
 	}
@@ -95,21 +95,21 @@ public class Handler {
 				Student s = students.get(sID);
 				if(s == null) {
 					s = new Student(sID);
-					students.put(sID, s);					
+					students.put(sID, s);
 				}
 				s.addExam(e);
 			});
 		}
-		studentsNumber = students.size();
+		S = students.size();
 	}
 	
 	/**
 	 * This method initializes the vectors used by the objective function.
 	 */
 	public void initialize() {
-		mutualExclusion = new int[examsNumber][examsNumber];
-		y = new int[examsNumber][examsNumber][PENALTIES];
-		solution = new int[examsNumber];
+		conflictWeight = new int[E][E];
+		conflict = new int[E][E][PENALTIES];
+		etSol = new int[E];
 		setPenalties();
 		
 //		for(int i = 0; i < PENALTIES; ++i)
@@ -125,10 +125,10 @@ public class Handler {
 //		}
 		
 		/* Test instance solution */
-		solution[0] = 1;
-		solution[1] = 3;
-		solution[2] = 6;
-		solution[3] = 1;
+		etSol[0] = 1;
+		etSol[1] = 3;
+		etSol[2] = 6;
+		etSol[3] = 1;
 		
 		if(checkFeasibility()) {
 			buildDistancies();
@@ -143,7 +143,7 @@ public class Handler {
 	 */
 	private void setPenalties() {
 		for(int k = 0; k < PENALTIES; ++k)
-			penalty[k] = (int) Math.pow(BASE_PENALTY, 5-(k+1));
+			p[k] = (int) Math.pow(BASE_PENALTY, 5-(k+1));
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class Handler {
 						for(Exam e2 : l) {
 							int i = e1.getId(), j = e2.getId();
 							if(i < j)
-								mutualExclusion[i-1][j-1]++;
+								conflictWeight[i-1][j-1]++;
 						}
 			});
 	}
@@ -168,12 +168,12 @@ public class Handler {
 	 * the possibility of penalties due to the little distance.
 	 */
 	private void buildDistancies() {
-		for(int i = 0; i < examsNumber; ++i) {
-			for(int j = 0; j < examsNumber; ++j) {
+		for(int i = 0; i < E; ++i) {
+			for(int j = 0; j < E; ++j) {
 				if(i < j) {	// Fill only the upper part of the matrix
-					int k = Math.abs(solution[i] - solution[j]); // Distance
+					int k = Math.abs(etSol[i] - etSol[j]); // Distance
 					if(k <= PENALTIES && k != 0) // Overlapping exams already checked
-						y[i][j][k-1] = 1;
+						conflict[i][j][k-1] = 1;
 				}
 			}
 		}		
@@ -184,9 +184,9 @@ public class Handler {
 	 * @return true if the solution is feasible, false otherwise.
 	 */
 	public boolean checkFeasibility() {
-		for(int i = 0; i < examsNumber; ++i)
-			for(int j = 0; j < examsNumber; ++j)
-				if(solution[i] == solution[j] && mutualExclusion[i][j] > 0) // Exam in the same timeslot and students in conflict
+		for(int i = 0; i < E; ++i)
+			for(int j = 0; j < E; ++j)
+				if(etSol[i] == etSol[j] && conflictWeight[i][j] > 0) // Exam in the same timeslot and students in conflict
 					return false;
 		return true;
 	}
@@ -197,15 +197,15 @@ public class Handler {
 	 */
 	public double objectiveFunction() {
 		double obj = 0.0;
-		for(int i = 0; i < examsNumber; ++i) {
-			for(int j = 0; j < examsNumber; ++j) {
+		for(int i = 0; i < E; ++i) {
+			for(int j = 0; j < E; ++j) {
 				double partialSum = 0.0;
 				for(int k = 0; k < PENALTIES; ++k) {
-					partialSum += penalty[k] * y[i][j][k];
+					partialSum += p[k] * conflict[i][j][k];
 				}
-				obj += mutualExclusion[i][j] * partialSum;
+				obj += conflictWeight[i][j] * partialSum;
 			}
 		}
-		return obj/studentsNumber;
+		return obj/S;
 	}
 }
