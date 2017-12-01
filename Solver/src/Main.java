@@ -1,4 +1,4 @@
-import it.polito.oma.solver.Handler;
+import it.polito.oma.solver.*;
 
 public class Main {
 

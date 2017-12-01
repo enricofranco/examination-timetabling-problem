@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import it.polito.oma.solver.threads.Generator;
+
 public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
@@ -125,16 +127,33 @@ public class Handler {
 //		}
 		
 		/* Test instance solution */
-		etSol[0] = 1;
-		etSol[1] = 3;
-		etSol[2] = 6;
-		etSol[3] = 1;
 		
-		if(checkFeasibility()) {
-			buildDistancies();
-			System.out.println("Objective function value: " + objectiveFunction());
-		} else
-			System.out.println("Unfeasible solution");
+		/*
+		 * Create three threads.
+		 */
+		Generator[] generators = new Generator[3];
+		Thread t[] = new Thread[3];
+		for(int i=0; i<3; i++) {
+			generators[i] = new Generator(T, exams, students);
+			t[i] = new Thread(generators[i]);
+			t[i].start();
+		}
+		
+		for(int i=0; i<3; i++) {
+			/*
+			 * For each thread, wait for a solution, then check feasibility
+			 */
+			while(!generators[i].isFinished());
+			etSol = generators[i].getSolution();
+			/*for(int j:etSol)
+				System.out.println(j);*/
+			if(checkFeasibility()) {
+				buildDistancies();
+				System.out.println("Objective function value: " + objectiveFunction());
+			} else {
+				System.out.println("Unfeasible solution");
+			}
+		}
 	}
 	
 	/**
