@@ -1,8 +1,10 @@
 package it.polito.oma.solver;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +14,8 @@ import it.polito.oma.solver.threads.Generator;
 public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
+	private String GROUP = "OMAAL_group09.sol";
+	private int THREADS_NUMBER = 10;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -105,6 +109,16 @@ public class Handler {
 		S = students.size();
 	}
 	
+	public void writeSolution(String path) throws IOException {
+		String fileName = path + GROUP;
+		try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
+			for(int i = 0; i < E; ++i) {
+				String s = String.format("%04d %d\n", i+1, etSol[i]);
+				r.write(s);
+			}
+		}
+	}
+	
 	/**
 	 * This method initializes the vectors used by the objective function.
 	 */
@@ -118,7 +132,7 @@ public class Handler {
 //			System.out.println(penalty[i]);
 //		System.out.println();
 		
-		buildMutualExclusionMatrix();
+		buildConflictWeight();
 		
 //		for(int i = 0; i < examsNumber; ++i) {
 //			for(int j = 0; j < examsNumber; ++j)
@@ -131,19 +145,19 @@ public class Handler {
 		/*
 		 * Create three threads.
 		 */
-		Generator[] generators = new Generator[3];
-		Thread t[] = new Thread[3];
-		for(int i=0; i<3; i++) {
+		Generator[] generators = new Generator[THREADS_NUMBER];
+		Thread t[] = new Thread[THREADS_NUMBER];
+		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			generators[i] = new Generator(T, exams, students);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 		}
-		
-		for(int i=0; i<3; i++) {
+
+		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			/*
 			 * For each thread, wait for a solution, then check feasibility
 			 */
-			while(!generators[i].isFinished());
+			while(t[i].getState() != Thread.State.TERMINATED);
 			etSol = generators[i].getSolution();
 			/*for(int j:etSol)
 				System.out.println(j);*/
@@ -169,7 +183,7 @@ public class Handler {
 	 * This method builds the matrix of mutual
 	 * exclusion due to the conflict between students.
 	 */
-	private void buildMutualExclusionMatrix() {
+	private void buildConflictWeight() {
 		students.values().stream()
 			.map(Student::getExams)
 			.forEach(l -> {

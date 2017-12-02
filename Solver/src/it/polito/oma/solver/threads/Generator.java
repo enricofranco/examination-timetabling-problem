@@ -41,9 +41,9 @@ public class Generator implements Runnable  {
 		 */
 		int jump = rand.nextInt(E/2)+1;
 		
-		for(int i=0;i<E;i++) {
-			solution[(i*jump)%E] = rand.nextInt(T)+1; //timeslot is choosen randomly
-			jump = rand.nextInt(jump/4+1)+jump/4+1; //then reset the jump parameter
+		for(int i = 0; i < E; ++i) {
+			solution[(i*jump)%E] = rand.nextInt(T) + 1; //timeslot is choosen randomly
+			jump = rand.nextInt(jump/4 + 1) + jump/4 + 1; //then reset the jump parameter
 		}
 		finish = true;
 	}
