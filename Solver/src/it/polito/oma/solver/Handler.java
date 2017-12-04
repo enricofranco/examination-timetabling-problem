@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 10;
+	private int THREADS_NUMBER = 4;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -29,9 +29,9 @@ public class Handler {
 	private int T;
 	
 	//Obj function parameters
-	private int conflictWeight[][];
+	public int conflictWeight[][];
 	private int p[] = new int[PENALTIES];
-	private int conflict[][][];
+    public int conflict[][][];
 	private int etSol[];	
 	
 	/**
@@ -148,7 +148,7 @@ public class Handler {
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, students);
+			generators[i] = new Generator(T, exams, students,this);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 		}
@@ -158,18 +158,33 @@ public class Handler {
 			 * For each thread, wait for a solution, then check feasibility
 			 */
 			while(t[i].getState() != Thread.State.TERMINATED);
-			etSol = generators[i].getSolution();
+			etSol=generators[i].getSolution();
+//			etSol=generators[i].getSolution();
 			/*for(int j:etSol)
 				System.out.println(j);*/
 			if(checkFeasibility()) {
 				buildDistancies();
 				System.out.println("Objective function value: " + objectiveFunction());
 			} else {
-				System.out.println("Unfeasible solution");
+//				System.out.println("Unfeasible solution "+oF(etSol));
+				System.out.println("."+this.oF(etSol));
 			}
 		}
 	}
-	
+	public int oF(int [] tmpSol) {
+		int of=0;
+		int i,j;
+		for(i=0;i<E;i++) {
+			for(j=0;j<E;j++) {
+				if(tmpSol[i]==tmpSol[j]&&i!=j) {
+					if(conflictWeight[i][j]>0)
+						of++;
+				}
+			}
+		}
+		
+		return of;
+	}
 	/**
 	 * This method set the penalties vector, due to the mutual distance
 	 * between two exams.
