@@ -14,6 +14,7 @@ public class Generator implements Runnable  {
 	private Map<Integer, Student> students;
 	private int S;
 	private int[] solution;
+	private int[][] tmpSol;
 	private boolean finish = false;
 	private Handler hand;
 	private int[][] taboList;
@@ -28,6 +29,7 @@ public class Generator implements Runnable  {
 		this.students = students;
 		this.S = students.size();
 		solution = new int[E];
+		tmpSol=new int[E][T];
 		this.hand=hand;
 		taboList=new int[N][4];
 	}
@@ -44,114 +46,132 @@ public class Generator implements Runnable  {
 		/*
 		 * the vector isn't filled linearly, but every jump position, chosen randomly 
 		 */
-        int jump = rand.nextInt(E/2)+1;
-        int key=rand.nextInt(T)+1;
-        for(int k=0;k<E;k++)
-        	solution[k]=key;
-		
-		for(int i = 0; i < E; ++i) {
-			solution[i] = rand.nextInt(T) + 1; //timeslot is choosen randomly
+//        int jump = rand.nextInt(E/2)+1;
+//        int key=rand.nextInt(T)+1;
+//        for(int k=0;k<E;k++)
+//        	solution[k]=key;
+//		
+//		for(int i = 0; i < E; ++i) {
+//			solution[i] = rand.nextInt(T) + 1; //timeslot is choosen randomly
 //			jump = rand.nextInt(jump/4 + 1) + jump/4 + 1; //then reset the jump parameter
+//		}
+//		solution=solv(solution,solution,0);
+//		for(int l=0;l<N;l++) {
+//			System.out.print(taboList[l][0]+" "+taboList[l][1]+",");
+//		}
+//		System.out.println();
+		
+		for(int i=0;i<E;i++) {
+			tmpSol[i][rand.nextInt(T)]=1;
 		}
-		solution=solv(solution,solution,0);
-		for(int l=0;l<N;l++) {
-			System.out.print(taboList[l][0]+" "+taboList[l][1]+",");
+		
+		tmpSol=solv(tmpSol,tmpSol,0);
+		for(int i=0;i<E;i++) {
+			for(int j=0;j<T;j++) {
+				if(tmpSol[i][j]==1)
+					solution[i]=j+1;
+			}
 		}
-		System.out.println();
+		
+		
+		
 		finish = true;
 	}
 
 
-	
-	
-	
-	
-//	taboList con best
-	private int[] solv(int[] bestSol, int[] bestSolSoFar, int count) {
-		 count++;
-		 if (count == 30) {
-		 return bestSolSoFar;
-		 }
-		int i, j, k, tmp, l, bestI = 0, bestJ = 0,bestEx1=E,bestEx2=E;
-		int[] sol = new int[E];
-		int[] saveCurrentGen = new int[E];
-		boolean status = false;
-		boolean tabo;
-		for (k = 0; k < E; k++) {
-			saveCurrentGen[k] = bestSol[k];
-		}
-//		for (k = 0; k < E; k++) {
-//			bestSol[k] = 1;
-//		}
-		for (i = 0; i < E / 2; i++) {
-			for (j = i + 1; j < E; j++) {
-				for (k = 0; k < E; k++) {
-					// funge meglio ma non so dire il perchè
-					 sol[k] = bestSol[k];
-					// save the solution that generate the neighborhood
-//					sol[k] = saveCurrentGen[k];
-				}
-				tabo = false;
-				if (sol[i] != sol[j]) {
-					tmp = sol[i];
-					sol[i] = sol[j];
-					sol[j] = tmp;
-					for (l = 0; l < N; l++) {
-						if (taboList[l][0] == j || taboList[l][1] == i || taboList[l][2] == sol[i]
-								|| taboList[l][3] == sol[j]) {
-							tabo = true;
-							break;
-						}
-					}
-					// in the taboList? BestSolutionSoFar?
-					if (!tabo) {
-						if (hand.oF(bestSol) >= hand.oF(sol)) {
-							for (k = 0; k < E; k++) {
-								bestSol[k] = sol[k];
-							}
-							if (hand.oF(bestSol) == 0) {
-								return bestSol;
-							}
-							bestI = i;
-							bestJ = j;
-							bestEx1=sol[i];
-							bestEx2=sol[j];
-						}
-					}
-					if (hand.oF(bestSolSoFar) > hand.oF(sol)) {
-						for (k = 0; k < E; k++) {
-							bestSol[k] = sol[k];
-						}
-						if (hand.oF(bestSol) == 0) {
-							return bestSol;
-						}
-						bestI = i;
-						bestJ = j;
-						bestEx1=sol[i];
-						bestEx2=sol[j];
-					}
-				}
-			}
-		}
-		for (l = N - 1; l > 0; l--) {
-			taboList[l][0] = taboList[l - 1][0];
-			taboList[l][1] = taboList[l - 1][1];
-			taboList[l][2] = taboList[l - 1][2];
-			taboList[l][3] = taboList[l - 1][3];
-			
-		}
-		taboList[0][0] = bestJ;
-		taboList[0][1] = bestI;
-		taboList[0][2] = bestEx2;
-		taboList[0][3] = bestEx1;
-		if (hand.oF(bestSolSoFar) > hand.oF(bestSol)) {
-			// bestSol become the bestSolSoFar
-			bestSolSoFar = solv(bestSol, bestSol, count);
-			return bestSolSoFar;
-		}
-		bestSolSoFar = solv(bestSol, bestSolSoFar, count);
+// cambio soluzione
+	private int[][] solv(int[][] bestSol,int[][]bestSolSoFar,int count){
+		
+		
 		return bestSolSoFar;
 	}
+	
+//	taboList con best
+//	private int[] solv(int[] bestSol, int[] bestSolSoFar, int count) {
+//		 count++;
+//		 if (count == 30) {
+//		 return bestSolSoFar;
+//		 }
+//		int i, j, k, tmp, l, bestI = 0, bestJ = 0,bestEx1=E,bestEx2=E;
+//		int[] sol = new int[E];
+//		int[] saveCurrentGen = new int[E];
+//		boolean status = false;
+//		boolean tabo;
+//		for (k = 0; k < E; k++) {
+//			saveCurrentGen[k] = bestSol[k];
+//		}
+////		for (k = 0; k < E; k++) {
+////			bestSol[k] = 1;
+////		}
+//		for (i = 0; i < E / 2; i++) {
+//			for (j = i + 1; j < E; j++) {
+//				for (k = 0; k < E; k++) {
+//					// funge meglio ma non so dire il perchè
+//					 sol[k] = bestSol[k];
+//					// save the solution that generate the neighborhood
+////					sol[k] = saveCurrentGen[k];
+//				}
+//				tabo = false;
+//				if (sol[i] != sol[j]) {
+//					tmp = sol[i];
+//					sol[i] = sol[j];
+//					sol[j] = tmp;
+//					for (l = 0; l < N; l++) {
+//						if (taboList[l][0] == j || taboList[l][1] == i || taboList[l][2] == sol[i]
+//								|| taboList[l][3] == sol[j]) {
+//							tabo = true;
+//							break;
+//						}
+//					}
+//					// in the taboList? BestSolutionSoFar?
+//					if (!tabo) {
+//						if (hand.oF(bestSol) >= hand.oF(sol)) {
+//							for (k = 0; k < E; k++) {
+//								bestSol[k] = sol[k];
+//							}
+//							if (hand.oF(bestSol) == 0) {
+//								return bestSol;
+//							}
+//							bestI = i;
+//							bestJ = j;
+//							bestEx1=sol[i];
+//							bestEx2=sol[j];
+//						}
+//					}
+//					if (hand.oF(bestSolSoFar) > hand.oF(sol)) {
+//						for (k = 0; k < E; k++) {
+//							bestSol[k] = sol[k];
+//						}
+//						if (hand.oF(bestSol) == 0) {
+//							return bestSol;
+//						}
+//						bestI = i;
+//						bestJ = j;
+//						bestEx1=sol[i];
+//						bestEx2=sol[j];
+//					}
+//				}
+//			}
+//		}
+//		for (l = N - 1; l > 0; l--) {
+//			taboList[l][0] = taboList[l - 1][0];
+//			taboList[l][1] = taboList[l - 1][1];
+//			taboList[l][2] = taboList[l - 1][2];
+//			taboList[l][3] = taboList[l - 1][3];
+//			
+//		}
+//		taboList[0][0] = bestJ;
+//		taboList[0][1] = bestI;
+//		taboList[0][2] = bestEx2;
+//		taboList[0][3] = bestEx1;
+//		if (hand.oF(bestSolSoFar) > hand.oF(bestSol)) {
+//			// bestSol become the bestSolSoFar
+//			bestSolSoFar = solv(bestSol, bestSol, count);
+//			return bestSolSoFar;
+//		}
+//		bestSolSoFar = solv(bestSol, bestSolSoFar, count);
+//		return bestSolSoFar;
+//	}
 	
 	
 	

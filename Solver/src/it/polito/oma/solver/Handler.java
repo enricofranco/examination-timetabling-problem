@@ -160,8 +160,9 @@ public class Handler {
 			while(t[i].getState() != Thread.State.TERMINATED);
 			etSol=generators[i].getSolution();
 //			etSol=generators[i].getSolution();
-			/*for(int j:etSol)
-				System.out.println(j);*/
+			for(int j:etSol)
+				System.out.print(j+" ");
+			System.out.println();
 			if(checkFeasibility()) {
 				buildDistancies();
 				System.out.println("Objective function value: " + objectiveFunction());
@@ -184,6 +185,19 @@ public class Handler {
 		}
 		
 		return of;
+	}
+	public int oF2(int [][] tmpSol) {
+		int of2=0;
+		int i,j,k;
+		for(j=0;j<T;i++) {
+			for(i=0;i<E;i++) {
+				for(k=i+1;k<E;k++) {
+					if(conflictWeight[i][k]>0)
+						of2++;
+				}
+			}
+		}
+		return of2;
 	}
 	/**
 	 * This method set the penalties vector, due to the mutual distance
