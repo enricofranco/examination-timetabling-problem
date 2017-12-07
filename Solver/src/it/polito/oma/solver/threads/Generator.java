@@ -83,6 +83,7 @@ public class Generator implements Runnable  {
 //					solution[i]=j+1;
 //			}
 //		}
+		System.out.println(exNoAss+"first");
 		for(i=0; i<T; i++) {
 			for(Exam e:exams.values()) {
 				if(e.getTake()==0) {
@@ -94,11 +95,11 @@ public class Generator implements Runnable  {
 				}
 			}
 		}
-		
-		while(exNoAss!=0) {
-			if(controllo==1) {
-				break;
-			}
+		System.out.println(exNoAss+"before");
+		while(exNoAss>0) {
+//			if(controllo==10000) {
+//				break;
+//			}
 			controllo++;
 			for(Exam e:exams.values()) {
 				if(e.getTake()==0) {
@@ -108,6 +109,7 @@ public class Generator implements Runnable  {
 							tsCh=tsArray[i];
 						}
 					}
+
 					ArrayList<Integer> lErim=new ArrayList<>();
 					for(Exam ex:tsCh.getExams().values()) {/*seleziono gli esami che fanno conflitto*/
 						if(ex.isExamConf(e)==1) {
@@ -116,12 +118,18 @@ public class Generator implements Runnable  {
 					}
 					for(int i=0; i<lErim.size(); i++) {/*rimuovo gli esami che fanno conflitto*/
 						tsCh.subExams(lErim.get(i), exams.get(lErim.get(i)));
+						exNoAss++;
 						exams.get(lErim.get(i)).setTaboo(tsCh);
 					}
 					tsCh.addExams(e.getId(), e);
+					exNoAss--;
 					minConf=Integer.MAX_VALUE;
 				}
 			}
+
+			System.out.println(exNoAss+"controll "+controllo);
+
+			System.out.println();
 		}
 		
 		for(Exam e:exams.values()) {

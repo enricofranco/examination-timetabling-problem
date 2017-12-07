@@ -8,11 +8,13 @@ public class Exam {
 	private int id;
 	private int enrolledStudents;
 	private int take=0;
+	int nBuffer=5;
 	private TimeSlot ts;
 	private List<Exam> examConf=new ArrayList<Exam>();
-	private TimeSlot[] tabooSlot=new TimeSlot[4];
+	private TimeSlot[] tabooSlot=new TimeSlot[nBuffer];
 	int indTaboo=0;
 	int i=0;
+	
 	
 	public Exam(int id, int enrolledStudents) {
 		this.id = id;
@@ -69,13 +71,13 @@ public class Exam {
 	public void setTaboo(TimeSlot ts) {
 		tabooSlot[indTaboo]=ts;
 		indTaboo++;
-		if(indTaboo>3) {
+		if(indTaboo>=nBuffer) {
 			indTaboo=0;
 		}
 	}
 	
 	public int checkTaboo(TimeSlot ts) {
-		for(i=0; i<4; i++) {
+		for(i=0; i<nBuffer; i++) {
 			if(tabooSlot[i]!=null) {
 				if(tabooSlot[i].getId()==ts.getId()) {
 					return 1;
