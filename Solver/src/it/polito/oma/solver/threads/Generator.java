@@ -1,6 +1,8 @@
 package it.polito.oma.solver.threads;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.*;
+
 import java.util.Random;
 
 import it.polito.oma.solver.*;
@@ -18,6 +20,13 @@ public class Generator implements Runnable  {
 	private boolean finish = false;
 	private Handler hand;
 	private int[][] taboList;
+	private TimeSlot[] tsArray;
+	private int i=0;
+	private int j=0;
+	private int exNoAss=0;
+	int minConf=Integer.MAX_VALUE;
+	TimeSlot tsCh;
+	int controllo=0;
 
 	/*
 	 * Set variables into the random generator
@@ -26,12 +35,14 @@ public class Generator implements Runnable  {
 		this.T = T;
 		this.exams = exams;
 		this.E = exams.size();
+		exNoAss=E;
 		this.students = students;
 		this.S = students.size();
 		solution = new int[E];
 		tmpSol=new int[E][T];
 		this.hand=hand;
 		taboList=new int[N][4];
+		tsArray=hand.setTimeSlot();
 	}
 	
 	@Override
@@ -61,19 +72,61 @@ public class Generator implements Runnable  {
 //		}
 //		System.out.println();
 		
-		for(int i=0;i<E;i++) {
-			tmpSol[i][rand.nextInt(T)]=1;
-		}
-		
-		tmpSol=solv(tmpSol,tmpSol,0);
-		for(int i=0;i<E;i++) {
-			for(int j=0;j<T;j++) {
-				if(tmpSol[i][j]==1)
-					solution[i]=j+1;
+//		for(int i=0;i<E;i++) {
+//			tmpSol[i][rand.nextInt(T)]=1;
+//		}
+//		
+//		tmpSol=solv(tmpSol,tmpSol,0);
+//		for(int i=0;i<E;i++) {
+//			for(int j=0;j<T;j++) {
+//				if(tmpSol[i][j]==1)
+//					solution[i]=j+1;
+//			}
+//		}
+		for(i=0; i<T; i++) {
+			for(Exam e:exams.values()) {
+				if(e.getTake()==0) {
+					if(tsArray[i].isConf(e.getId())==0) {
+						e.setTimeSlot(tsArray[i]);
+						exNoAss--;
+						tsArray[i].addExams(e.getId(), e);
+					}
+				}
 			}
 		}
 		
+		while(exNoAss!=0) {
+			if(controllo==1) {
+				break;
+			}
+			controllo++;
+			for(Exam e:exams.values()) {
+				if(e.getTake()==0) {
+					for(i=0; i<T; i++) {/*trova il timeSlot in cui inserire*/
+						if(tsArray[i].getNConf(e.getId())<=minConf && e.checkTaboo(tsArray[i])==0) {
+							minConf=tsArray[i].getNConf(e.getId());
+							tsCh=tsArray[i];
+						}
+					}
+					ArrayList<Integer> lErim=new ArrayList<>();
+					for(Exam ex:tsCh.getExams().values()) {/*seleziono gli esami che fanno conflitto*/
+						if(ex.isExamConf(e)==1) {
+							lErim.add(ex.getId());
+						}
+					}
+					for(int i=0; i<lErim.size(); i++) {/*rimuovo gli esami che fanno conflitto*/
+						tsCh.subExams(lErim.get(i), exams.get(lErim.get(i)));
+						exams.get(lErim.get(i)).setTaboo(tsCh);
+					}
+					tsCh.addExams(e.getId(), e);
+					minConf=Integer.MAX_VALUE;
+				}
+			}
+		}
 		
+		for(Exam e:exams.values()) {
+			solution[e.getId()-1]=e.getTimeSlot().getId();
+		}
 		
 		finish = true;
 	}
@@ -315,7 +368,6 @@ public class Generator implements Runnable  {
 //		}
 //		return etSol;
 //	}
-	
 	
 	public int[] getSolution() {
 		return solution;

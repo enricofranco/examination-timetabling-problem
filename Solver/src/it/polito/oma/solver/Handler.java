@@ -10,12 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import it.polito.oma.solver.threads.Generator;
+import it.polito.oma.solver.threads.TimeSlot;
 
 public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 4;
+	private int THREADS_NUMBER = 1;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -167,7 +168,7 @@ public class Handler {
 				buildDistancies();
 				System.out.println("Objective function value: " + objectiveFunction());
 			} else {
-//				System.out.println("Unfeasible solution "+oF(etSol));
+				System.out.println("Unfeasible solution "+oF(etSol));
 				System.out.println("."+this.oF(etSol));
 			}
 		}
@@ -219,8 +220,15 @@ public class Handler {
 					for(Exam e1 : l)
 						for(Exam e2 : l) {
 							int i = e1.getId(), j = e2.getId();
-							if(i < j)
+							if(i < j) {
 								conflictWeight[i-1][j-1]++;
+								if(e1.isExamConf(e2)==0) {
+									e1.addExamConf(e2);
+								}
+								if(e2.isExamConf(e1)==0) {
+									e2.addExamConf(e1);
+								}
+							}
 						}
 			});
 	}
@@ -269,5 +277,24 @@ public class Handler {
 			}
 		}
 		return obj/S;
+	}
+	
+	public TimeSlot[] setTimeSlot() {
+		TimeSlot[] tsArray=new TimeSlot[T];
+		int i=0;
+		for(i=0; i<T; i++) {
+			tsArray[i]=new TimeSlot(i, E);
+		}
+		
+		return tsArray;
+	}
+	
+	public int isConflict(int i, int j) {
+		if(conflictWeight[i][j]>0 || conflictWeight[j][i]>0) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
 	}
 }
