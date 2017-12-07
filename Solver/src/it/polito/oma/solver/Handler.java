@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 10;
+	private int THREADS_NUMBER = 1;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -44,7 +44,6 @@ public class Handler {
 			loadStudents(path + ".stu");
 			loadTimeslot(path + ".slo");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -148,7 +147,7 @@ public class Handler {
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, students);
+			generators[i] = new Generator(T, E, conflictWeight);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 		}
