@@ -9,6 +9,7 @@ public class Main {
 	 * @param args Command line arguments
 	 */	
 	public static void main(String[] args) {
+		long timeStart=System.nanoTime();
 		Handler h = new Handler();
 		h.loadInstance("./src/demo/instance01");
 		h.initialize();
@@ -19,5 +20,6 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println((System.nanoTime()-timeStart)/1000000000+" secondi");
 	}
 }

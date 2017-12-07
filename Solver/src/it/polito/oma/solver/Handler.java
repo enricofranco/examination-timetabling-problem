@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 4;
+	private int THREADS_NUMBER = 1;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -189,14 +189,17 @@ public class Handler {
 	public int oF2(int [][] tmpSol) {
 		int of2=0;
 		int i,j,k;
-		for(j=0;j<T;i++) {
+		for(j=0;j<T;j++) {
 			for(i=0;i<E;i++) {
+				if(tmpSol[i][j]==1) {
 				for(k=i+1;k<E;k++) {
-					if(conflictWeight[i][k]>0)
+					if(conflictWeight[i][k]>0 && tmpSol[i][j]==1 && tmpSol[k][j]==1)
 						of2++;
+				}
 				}
 			}
 		}
+
 		return of2;
 	}
 	/**
