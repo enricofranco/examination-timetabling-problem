@@ -131,16 +131,18 @@ public class Generator implements Runnable  {
 //		if(count/3<N){
 //		NTabo=N-count/3;
 //		}
-		if(hand.oF2(bestSolSoFar)==0) {
+		int conflictsBest = hand.oF2(bestSolSoFar);
+		int conflicts;
+		if(conflictsBest == 0) {
 			return bestSolSoFar;
 		}
 		count++;
-		if (count == 3000)
-			return bestSolSoFar;
+//		if (count == 3000)
+//			return bestSolSoFar;
 		int[][] sol = new int[E][T];
 		int[][] saveCurrentState = new int[E][T];
 		int bestBest, bestSoFar;
-		bestSoFar=hand.oF2(bestSolSoFar);
+		bestSoFar=conflictsBest;
 		for (i = 0; i < E; i++)
 			for (j = 0; j < T; j++) {
 				saveCurrentState[i][j] = bestSol[i][j];
@@ -151,9 +153,10 @@ public class Generator implements Runnable  {
 				for (l = 0; l < T; l++) {
 					 sol[k][l] = saveCurrentState[k][l];
 				}
-
+			
+			conflictsBest = hand.oF2(bestSol);
 			for (j = 0; j < T; j++) {
-				bestBest=hand.oF2(bestSol);
+				bestBest=conflictsBest;
 				tabo = false;
 				for (k = 0; k < T; k++) {
 					if (sol[i][k] == 1) {
@@ -163,13 +166,14 @@ public class Generator implements Runnable  {
 					}
 				}
 				sol[i][j] = 1;
+				conflicts = hand.oF2(sol);
 				for (k = 0; k < NTabo; k++) {
 					if (taboList[k][0] == i && taboList[k][1] == j && taboList[k][2] == tmpEx
 							&& taboList[k][1] == tmpTime)
 						tabo = true;
 				}
 				if (!tabo) {
-					if (bestBest > hand.oF2(sol)) {
+					if (bestBest > conflicts) {
 						bestEx = i;
 						bestTime = j;
 						preEx = tmpEx;
@@ -178,10 +182,11 @@ public class Generator implements Runnable  {
 							for (l = 0; l < T; l++) {
 								bestSol[k][l] = sol[k][l];
 							}
+						conflictsBest = conflicts;
 
 					}
 				}
-				if (bestSoFar > hand.oF2(sol)) {
+				if (bestSoFar > conflicts) {
 					bestEx = i;
 					bestTime = j;
 					preEx = tmpEx;
@@ -190,12 +195,14 @@ public class Generator implements Runnable  {
 						for (l = 0; l < T; l++) {
 							bestSol[k][l] = sol[k][l];
 						}
+					conflictsBest = conflicts;
 
 				}
 			}
 		}
-		System.out.println(hand.oF2(bestSol)+" count"+count);
-		if(hand.oF2(bestSol)==bestSoFar)
+		refreshTabooList(preEx, preTime, bestEx, bestTime);
+		System.out.println(conflictsBest+" count"+count);
+		if(conflictsBest==bestSoFar)
 			status++;
 		else
 			status=0;
@@ -211,32 +218,12 @@ public class Generator implements Runnable  {
 			}
 			
 			bestSol[i][j]=1;
-			for (l = NTabo - 1; l > 0; l--) {
-				taboList[l][0] = taboList[l - 1][0];
-				taboList[l][1] = taboList[l - 1][1];
-				taboList[l][2] = taboList[l - 1][2];
-				taboList[l][3] = taboList[l - 1][3];
-
-			}
-			taboList[0][0] = preEx;
-			taboList[0][1] = preTime;
-			taboList[0][2] = i;
-			taboList[0][3] = j;
+			refreshTabooList(preEx, preTime, i, j);
 			bestSolSoFar = solv(bestSol, bestSol, count,status);
 			return bestSolSoFar;
 		}
 		
-		for (l = NTabo - 1; l > 0; l--) {
-			taboList[l][0] = taboList[l - 1][0];
-			taboList[l][1] = taboList[l - 1][1];
-			taboList[l][2] = taboList[l - 1][2];
-			taboList[l][3] = taboList[l - 1][3];
-
-		}
-		taboList[0][0] = preEx;
-		taboList[0][1] = preTime;
-		taboList[0][2] = bestEx;
-		taboList[0][3] = bestTime;
+		
 		if (bestSoFar > hand.oF2(bestSol)) {
 			bestSolSoFar = solv(bestSol, bestSol, count,status);
 			return bestSolSoFar;
@@ -478,6 +465,20 @@ public class Generator implements Runnable  {
 	
 	public int[] getSolution() {
 		return solution;
+	}
+	
+	private void refreshTabooList(int preEx, int preTime, int i, int j) {
+		for (int l = N - 1; l > 0; l--) {
+			taboList[l][0] = taboList[l - 1][0];
+			taboList[l][1] = taboList[l - 1][1];
+			taboList[l][2] = taboList[l - 1][2];
+			taboList[l][3] = taboList[l - 1][3];
+
+		}
+		taboList[0][0] = preEx;
+		taboList[0][1] = preTime;
+		taboList[0][2] = i;
+		taboList[0][3] = j;
 	}
 	
 	public boolean isFinished() {

@@ -186,22 +186,24 @@ public class Handler {
 		
 		return of;
 	}
+	
 	public int oF2(int [][] tmpSol) {
 		int of2=0;
 		int i,j,k;
-		for(j=0;j<T;j++) {
-			for(i=0;i<E;i++) {
-				if(tmpSol[i][j]==1) {
-				for(k=i+1;k<E;k++) {
-					if(conflictWeight[i][k]>0 && tmpSol[i][j]==1 && tmpSol[k][j]==1)
-						of2++;
-				}
+		for(i=0;i<T;i++) {
+			for(j=0;j<E;j++) {
+				if(tmpSol[j][i]==1) {
+					for(k=j+1;k<E;k++) {
+						if(conflictWeight[j][k]>0 && tmpSol[j][i]==1 && tmpSol[k][i]==1)
+							of2++;
+					}
 				}
 			}
 		}
 
 		return of2;
 	}
+	
 	/**
 	 * This method set the penalties vector, due to the mutual distance
 	 * between two exams.
