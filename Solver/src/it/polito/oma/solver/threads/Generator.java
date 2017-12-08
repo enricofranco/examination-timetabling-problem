@@ -26,7 +26,8 @@ public class Generator implements Runnable  {
 	private int exNoAss=0;
 	int minConf=Integer.MAX_VALUE;
 	TimeSlot tsCh;
-	int controllo=0;
+	private int eCasuale=0, tsCasuale=0, flag=0, flagMut=0, minExNoAss=0, minGob=Integer.MAX_VALUE;
+	private long controllo=0;
 
 	/*
 	 * Set variables into the random generator
@@ -36,6 +37,7 @@ public class Generator implements Runnable  {
 		this.exams = exams;
 		this.E = exams.size();
 		exNoAss=E;
+		minExNoAss=E;
 		this.students = students;
 		this.S = students.size();
 		solution = new int[E];
@@ -97,10 +99,49 @@ public class Generator implements Runnable  {
 		}
 		System.out.println(exNoAss+"before");
 		while(exNoAss>0) {
-//			if(controllo==10000) {
-//				break;
-//			}
+			if(controllo==5000) {
+				if(minExNoAss>minGob+3) {
+					for(Exam ex2:exams.values()) {
+						if(ex2.getCh()==1) {
+							ex2.setNoCh();
+							ex2.getTimeSlot().subExams(ex2.getId(), ex2);
+							ex2.getTimeSlotPrec().addExams(ex2.getId(), ex2);
+							ex2.setTimeSlot(ex2.getTimeSlotPrec());
+						}
+					}
+				}
+			}
+			if(controllo==10000) {/*mutazione*/
+				flagMut=0;
+				controllo=0;
+				if(minExNoAss<minGob) {
+					minGob=minExNoAss;
+				}
+				minExNoAss=Integer.MAX_VALUE;
+				
+				for(Exam ex1:exams.values()) {
+					if(ex1.getTake()==1) {
+						for(i=0; i<T; i++) {/*trova dei timeSlot in cui poter sostituire*/
+							if(tsArray[i].getNConf(ex1.getId())==0 && ex1.checkTaboo(tsArray[i])==0) {
+								if(rand.nextInt(2)==0) {
+									flag=1;
+									tsCh=tsArray[i];
+								}
+							}
+						}
+						if(flag==1) {
+							flag=0;
+							ex1.setCh();
+							ex1.setTimeSlotPrec(ex1.getTimeSlot());
+							ex1.getTimeSlot().subExams(ex1.getId(), ex1);
+							ex1.setTimeSlot(tsCh);
+							tsCh.addExams(ex1.getId(), ex1);
+						}
+					}
+				}
+			}
 			controllo++;
+
 			for(Exam e:exams.values()) {
 				if(e.getTake()==0) {
 					for(i=0; i<T; i++) {/*trova il timeSlot in cui inserire*/
@@ -122,12 +163,17 @@ public class Generator implements Runnable  {
 						exams.get(lErim.get(i)).setTaboo(tsCh);
 					}
 					tsCh.addExams(e.getId(), e);
+					e.setTimeSlot(tsCh);
 					exNoAss--;
 					minConf=Integer.MAX_VALUE;
 				}
 			}
+			
+			if(exNoAss<=minExNoAss) {
+				minExNoAss=exNoAss;
+			}
 
-			System.out.println(exNoAss+"controll "+controllo);
+			System.out.println(exNoAss+"controll "+controllo +"min " + minExNoAss + "   minGob " + minGob);
 
 			System.out.println();
 		}

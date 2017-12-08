@@ -12,8 +12,8 @@ public class Exam {
 	private TimeSlot ts;
 	private List<Exam> examConf=new ArrayList<Exam>();
 	private TimeSlot[] tabooSlot=new TimeSlot[nBuffer];
-	int indTaboo=0;
-	int i=0;
+	int indTaboo=0, i=0, flagCh=0;
+	private TimeSlot tsPrec;
 	
 	
 	public Exam(int id, int enrolledStudents) {
@@ -85,5 +85,25 @@ public class Exam {
 			}	
 		}
 		return 0;
+	}
+	
+	public void setTimeSlotPrec(TimeSlot ts) {
+		tsPrec=ts;
+	}
+	
+	public TimeSlot getTimeSlotPrec() {
+		return tsPrec;
+	}
+	
+	public void setCh() {
+		flagCh=1;
+	}
+	
+	public void setNoCh() {
+		flagCh=0;
+	}
+	
+	public int getCh() {
+		return flagCh;
 	}
 }
