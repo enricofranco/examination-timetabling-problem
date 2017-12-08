@@ -99,7 +99,9 @@ public class Generator implements Runnable  {
 		}
 		System.out.println(exNoAss+"before");
 		while(exNoAss>0) {
+			controllo++;
 			if(controllo==5000) {
+				controllo=10000;
 				if(minExNoAss>minGob+3) {
 					for(Exam ex2:exams.values()) {
 						if(ex2.getCh()==1) {
@@ -114,9 +116,6 @@ public class Generator implements Runnable  {
 			if(controllo==10000) {/*mutazione*/
 				flagMut=0;
 				controllo=0;
-				if(minExNoAss<minGob) {
-					minGob=minExNoAss;
-				}
 				minExNoAss=Integer.MAX_VALUE;
 				
 				for(Exam ex1:exams.values()) {
@@ -140,7 +139,6 @@ public class Generator implements Runnable  {
 					}
 				}
 			}
-			controllo++;
 
 			for(Exam e:exams.values()) {
 				if(e.getTake()==0) {
@@ -171,6 +169,9 @@ public class Generator implements Runnable  {
 			
 			if(exNoAss<=minExNoAss) {
 				minExNoAss=exNoAss;
+			}
+			if(minExNoAss<minGob) {
+				minGob=minExNoAss;
 			}
 
 			System.out.println(exNoAss+"controll "+controllo +"min " + minExNoAss + "   minGob " + minGob);

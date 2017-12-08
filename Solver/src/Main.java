@@ -10,7 +10,7 @@ public class Main {
 	 */	
 	public static void main(String[] args) {
 		Handler h = new Handler();
-		h.loadInstance("./src/demo/instance03");
+		h.loadInstance("./src/demo/instance05");
 		h.initialize();
 		
 		try {
