@@ -7,20 +7,21 @@ import it.polito.oma.solver.threads.TimeSlot;
 public class Exam {
 	private int id;
 	private int enrolledStudents;
-	private int take=0;
-	int nBuffer=5;
-	private TimeSlot ts;
-	private List<Exam> examConf=new ArrayList<Exam>();
-	private TimeSlot[] tabooSlot=new TimeSlot[nBuffer];
-	int indTaboo=0, i=0, flagCh=0;
+	private boolean taken;
+	private int tabooBuffer = 5;
+	private TimeSlot timeSlot;
+	private List<Exam> examsInConflict = new ArrayList<Exam>();
+	private TimeSlot[] tabooSlot = new TimeSlot[tabooBuffer];
+	private int tabooPosition = 0;
+	private boolean flagIsChanged = false;
 	private TimeSlot tsPrec;
 	
 	
 	public Exam(int id, int enrolledStudents) {
 		this.id = id;
 		this.enrolledStudents = enrolledStudents;
-		indTaboo=0;
-		take=0;
+		tabooPosition=0;
+		taken = false;
 	}
 
 	public int getId() {
@@ -32,59 +33,34 @@ public class Exam {
 	}
 	
 	public void setTake() {
-		take=1;
-	}
-	
-	public int getTake() {
-		return take;
-	}
-	
-	public int isExamConf(Exam e) {
-		if(examConf.contains(e)) {
-			return 1;
-		}
-		else {
-			return 0;
-		}
-	}
-	
-	public void addExamConf(Exam e) {
-		examConf.add(e);
-	}
-	
-	public List<Exam> getExamConf() {
-		return examConf;
-	}
-	
-	public void setTimeSlot(TimeSlot ts) {
-		this.ts=ts;
-	}
-	
-	public TimeSlot getTimeSlot() {
-		return ts;
+		taken = true;
 	}
 	
 	public void setNoTake() {
-		take=0;
+		taken = false;
 	}
 	
-	public void setTaboo(TimeSlot ts) {
-		tabooSlot[indTaboo]=ts;
-		indTaboo++;
-		if(indTaboo>=nBuffer) {
-			indTaboo=0;
-		}
+	public boolean getTake() {
+		return taken;
 	}
 	
-	public int checkTaboo(TimeSlot ts) {
-		for(i=0; i<nBuffer; i++) {
-			if(tabooSlot[i]!=null) {
-				if(tabooSlot[i].getId()==ts.getId()) {
-					return 1;
-				}
-			}	
+	public boolean searchConflictWithExam(Exam e) {
+		if(examsInConflict.contains(e)) {
+			return true;
 		}
-		return 0;
+		return false;
+	}
+	
+	public void addExamConflict(Exam e) {
+		examsInConflict.add(e);
+	}
+	
+	public List<Exam> getExamConflict() {
+		return examsInConflict;
+	}
+	
+	public void setTimeSlot(TimeSlot ts) {
+		this.timeSlot=ts;
 	}
 	
 	public void setTimeSlotPrec(TimeSlot ts) {
@@ -95,15 +71,38 @@ public class Exam {
 		return tsPrec;
 	}
 	
-	public void setCh() {
-		flagCh=1;
+	public TimeSlot getTimeSlot() {
+		return timeSlot;
 	}
 	
-	public void setNoCh() {
-		flagCh=0;
+	public void setTaboo(TimeSlot ts) {
+		tabooSlot[tabooPosition]=ts;
+		tabooPosition++;
+		if(tabooPosition>=tabooBuffer) {
+			tabooPosition=0;
+		}
 	}
 	
-	public int getCh() {
-		return flagCh;
+	public boolean checkTaboo(TimeSlot ts) {
+		for(int i=0; i<tabooBuffer; i++) {
+			if(tabooSlot[i]!=null) {
+				if(tabooSlot[i].getId()==ts.getId()) {
+					return true;
+				}
+			}	
+		}
+		return false;
+	}
+	
+	public void setChange() {
+		flagIsChanged = true;
+	}
+	
+	public void setNoChange() {
+		flagIsChanged = false;
+	}
+	
+	public boolean getChange() {
+		return flagIsChanged;
 	}
 }

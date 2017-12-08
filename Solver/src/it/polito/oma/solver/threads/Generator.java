@@ -9,172 +9,199 @@ import it.polito.oma.solver.*;
 
 public class Generator implements Runnable  {
 
-	private int N=5;
+	//Timeslots
 	private int T;
+	private TimeSlot[] timeslotsArray;
+	private TimeSlot timeslotChange;
+	
+	//Exams
 	private Map<Integer, Exam> exams;
 	private int E;
-	private Map<Integer, Student> students;
-	private int S;
-	private int[] solution;
-	private int[][] tmpSol;
-	private boolean finish = false;
-	private Handler hand;
-	private int[][] taboList;
-	private TimeSlot[] tsArray;
-	private int i=0;
-	private int j=0;
-	private int exNoAss=0;
-	int minConf=Integer.MAX_VALUE;
-	TimeSlot tsCh;
-	private int eCasuale=0, tsCasuale=0, flag=0, flagMut=0, minExNoAss=0, minGob=Integer.MAX_VALUE;
-	private long controllo=0;
+	private int numberExamsWithoutTimeslot = 0;
+	
+	//Controls
+	private boolean mutationFlag = false;
+	private int	minExamWithoutTimeslot = 0,
+				minConflicts = Integer.MAX_VALUE,
+				minGlobalConflicts = Integer.MAX_VALUE;
+	private long control = 0;
 
+	//Solution vector
+	private int[] solution;
+	
 	/*
 	 * Set variables into the random generator
 	 */
-	public Generator(int T, Map<Integer, Exam> exams, Map <Integer, Student> students,Handler hand) {
+	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts) {
 		this.T = T;
-		this.exams = exams;
 		this.E = exams.size();
-		exNoAss=E;
-		minExNoAss=E;
-		this.students = students;
-		this.S = students.size();
-		solution = new int[E];
-		tmpSol=new int[E][T];
-		this.hand=hand;
-		taboList=new int[N][4];
-		tsArray=hand.setTimeSlot();
-	}
-	
-	@Override
-	public void run() {
-		/*
-		 * set random parameters
-		 */
-		Random rand = new Random();
-		boolean feasible = false;
-		rand.setSeed(System.nanoTime());
-		
-		/*
-		 * the vector isn't filled linearly, but every jump position, chosen randomly 
-		 */
-//        int jump = rand.nextInt(E/2)+1;
-//        int key=rand.nextInt(T)+1;
-//        for(int k=0;k<E;k++)
-//        	solution[k]=key;
-//		
-//		for(int i = 0; i < E; ++i) {
-//			solution[i] = rand.nextInt(T) + 1; //timeslot is choosen randomly
-//			jump = rand.nextInt(jump/4 + 1) + jump/4 + 1; //then reset the jump parameter
-//		}
-//		solution=solv(solution,solution,0);
-//		for(int l=0;l<N;l++) {
-//			System.out.print(taboList[l][0]+" "+taboList[l][1]+",");
-//		}
-//		System.out.println();
-		
-//		for(int i=0;i<E;i++) {
-//			tmpSol[i][rand.nextInt(T)]=1;
-//		}
-//		
-//		tmpSol=solv(tmpSol,tmpSol,0);
-//		for(int i=0;i<E;i++) {
-//			for(int j=0;j<T;j++) {
-//				if(tmpSol[i][j]==1)
-//					solution[i]=j+1;
-//			}
-//		}
-		System.out.println(exNoAss+"first");
-		for(i=0; i<T; i++) {
-			for(Exam e:exams.values()) {
-				if(e.getTake()==0) {
-					if(tsArray[i].isConf(e.getId())==0) {
-						e.setTimeSlot(tsArray[i]);
-						exNoAss--;
-						tsArray[i].addExams(e.getId(), e);
+		this.exams = new TreeMap<Integer, Exam>();
+		for(Integer i:exams.keySet()) {
+			Exam exam = exams.get(i);
+			Exam e = new Exam(i, exam.getEnrolledStudents());
+			this.exams.put(i, e);
+//			System.out.println(this.exams.get(i).getId() + " " + this.exams.get(i).getEnrolledStudents());
+		}
+		for(Exam e1:this.exams.values()) {
+			int id1 = e1.getId()-1;
+			for(Exam e2:this.exams.values()) {
+				int id2 = e2.getId()-1;
+				if(conflicts[id1][id2] > 0) {
+					if(!e1.searchConflictWithExam(e2)) {
+						e1.addExamConflict(e2);
+					}
+					if(!e2.searchConflictWithExam(e1)) {
+						e2.addExamConflict(e1);
 					}
 				}
 			}
 		}
-		System.out.println(exNoAss+"before");
-		while(exNoAss>0) {
-			controllo++;
-			if(controllo==5000) {
-				controllo=10000;
-				if(minExNoAss>minGob+3) {
-					for(Exam ex2:exams.values()) {
-						if(ex2.getCh()==1) {
-							ex2.setNoCh();
-							ex2.getTimeSlot().subExams(ex2.getId(), ex2);
-							ex2.getTimeSlotPrec().addExams(ex2.getId(), ex2);
-							ex2.setTimeSlot(ex2.getTimeSlotPrec());
-						}
+		this.solution = new int[E];
+		
+		numberExamsWithoutTimeslot=E;
+		minExamWithoutTimeslot=E;
+		
+		setTimeSlot();
+	}
+	
+	@Override
+	public void run() {
+		/**
+		 * set random parameters
+		 */
+		Random rand = new Random();
+		int examId;
+		int conflicts;
+		rand.setSeed(System.nanoTime());
+		
+		System.out.println(numberExamsWithoutTimeslot + " first");
+		
+		/**
+		 * This loop assigns an exam to the first free timeslot, paying attention to conflicts
+		 * with other exams.
+		 * Greedy Loop.
+		 */
+		for(int i = 0; i < T; i++) {
+			for(Exam exam:exams.values()) {
+				if(!exam.getTake()) {
+					examId = exam.getId();
+					if(timeslotsArray[i].isInConflict(examId) == 0) {
+						timeslotsArray[i].addExams(examId, exam);
+						exam.setTimeSlot(timeslotsArray[i]);
+						numberExamsWithoutTimeslot--;
 					}
 				}
 			}
-			if(controllo==10000) {/*mutazione*/
-				flagMut=0;
-				controllo=0;
-				minExNoAss=Integer.MAX_VALUE;
-				
-				for(Exam ex1:exams.values()) {
-					if(ex1.getTake()==1) {
-						for(i=0; i<T; i++) {/*trova dei timeSlot in cui poter sostituire*/
-							if(tsArray[i].getNConf(ex1.getId())==0 && ex1.checkTaboo(tsArray[i])==0) {
-								if(rand.nextInt(2)==0) {
-									flag=1;
-									tsCh=tsArray[i];
-								}
-							}
-						}
-						if(flag==1) {
-							flag=0;
-							ex1.setCh();
-							ex1.setTimeSlotPrec(ex1.getTimeSlot());
-							ex1.getTimeSlot().subExams(ex1.getId(), ex1);
-							ex1.setTimeSlot(tsCh);
-							tsCh.addExams(ex1.getId(), ex1);
-						}
-					}
-				}
-			}
-
-			for(Exam e:exams.values()) {
-				if(e.getTake()==0) {
-					for(i=0; i<T; i++) {/*trova il timeSlot in cui inserire*/
-						if(tsArray[i].getNConf(e.getId())<=minConf && e.checkTaboo(tsArray[i])==0) {
-							minConf=tsArray[i].getNConf(e.getId());
-							tsCh=tsArray[i];
+		}
+		
+		/**
+		 * At the end of this loop, there could be not assigned exams, because of conflicts.
+		 * These exams are assigned to the slot with the smallest number of conflicts, then
+		 * the other exams in conflicts, are removed.
+		 * The loop ends when there are no exam to assign 
+		 */
+		
+		System.out.println(numberExamsWithoutTimeslot + " before");
+		while(numberExamsWithoutTimeslot > 0) {
+			control++;
+			if(control == 5000) {
+				if(minExamWithoutTimeslot > minGlobalConflicts + 3) {
+					for(Exam exam:exams.values()) {
+						if(exam.getChange()) {
+							examId = exam.getId();
+							exam.setNoChange();
+							exam.getTimeSlot().subExams(examId, exam);
+							exam.getTimeSlotPrec().addExams(examId, exam);
+							exam.setTimeSlot(exam.getTimeSlotPrec());
 						}
 					}
-
-					ArrayList<Integer> lErim=new ArrayList<>();
-					for(Exam ex:tsCh.getExams().values()) {/*seleziono gli esami che fanno conflitto*/
-						if(ex.isExamConf(e)==1) {
-							lErim.add(ex.getId());
-						}
-					}
-					for(int i=0; i<lErim.size(); i++) {/*rimuovo gli esami che fanno conflitto*/
-						tsCh.subExams(lErim.get(i), exams.get(lErim.get(i)));
-						exNoAss++;
-						exams.get(lErim.get(i)).setTaboo(tsCh);
-					}
-					tsCh.addExams(e.getId(), e);
-					e.setTimeSlot(tsCh);
-					exNoAss--;
-					minConf=Integer.MAX_VALUE;
 				}
 			}
 			
-			if(exNoAss<=minExNoAss) {
-				minExNoAss=exNoAss;
-			}
-			if(minExNoAss<minGob) {
-				minGob=minExNoAss;
+			if(control == 5000) {/*Mutation*/
+				control = 0;
+				
+				minExamWithoutTimeslot = Integer.MAX_VALUE;
+				
+				/**
+				 * For each exam, this loop probably (1/3) change the state of an exam, if the exam is
+				 * in a timeslot and there are no conflicts with other timeslots
+				 */
+				for(Exam exam:exams.values()) {
+					examId = exam.getId();
+					if(exam.getTake()) {
+						for(int i = 0; i < T; i++) {/*Search a free timeslot*/
+							if(timeslotsArray[i].getNumberOfConflicts(examId) == 0
+									&& !exam.checkTaboo(timeslotsArray[i])) {
+								if(rand.nextInt(2) == 0) {
+									mutationFlag = true;
+									timeslotChange = timeslotsArray[i];
+								}
+							}
+						}
+						if(mutationFlag) {
+							mutationFlag = false;
+							exam.setChange();
+							exam.setTimeSlotPrec(exam.getTimeSlot());
+							exam.getTimeSlot().subExams(examId, exam);
+							exam.setTimeSlot(timeslotChange);
+							timeslotChange.addExams(examId, exam);
+						}
+					}
+				}
 			}
 
-			System.out.println(exNoAss+"controll "+controllo +"min " + minExNoAss + "   minGob " + minGob);
+			/**
+			 * for each exam, if the exam isn't taken, search the first timeslot with the smallest number
+			 * of conflicts, then remove all the other exam in conflict with the added exam
+			 */
+			for(Exam exam:exams.values()) {
+				examId = exam.getId();
+				if(!exam.getTake()) {
+					for(int i = 0; i < T; i++) {/*Search a feasible timeslot*/
+						conflicts = timeslotsArray[i].getNumberOfConflicts(examId);
+						if(conflicts <= minConflicts && !exam.checkTaboo(timeslotsArray[i])) {
+							minConflicts = conflicts;
+							timeslotChange = timeslotsArray[i];
+						}
+					}
+
+					ArrayList<Integer> listExamWithoutTimeslot = new ArrayList<>();
+					/**
+					 * Select all the exam in conflict
+					 */
+					for(Exam examInTimeslotChange:timeslotChange.getExams().values()) {
+						if(examInTimeslotChange.searchConflictWithExam(exam)) {
+							listExamWithoutTimeslot.add(examInTimeslotChange.getId());
+						}
+					}
+					/**
+					 * Remove the searched exams
+					 */
+					for(int i = 0; i < listExamWithoutTimeslot.size(); i++) {
+						int examIdWithoutTimeslot = listExamWithoutTimeslot.get(i);
+						timeslotChange.subExams(examIdWithoutTimeslot, exams.get(examIdWithoutTimeslot));
+						numberExamsWithoutTimeslot++;
+						exams.get(examIdWithoutTimeslot).setTaboo(timeslotChange);
+					}
+					timeslotChange.addExams(examId, exam);
+					exam.setTimeSlot(timeslotChange);
+					numberExamsWithoutTimeslot--;
+					minConflicts = Integer.MAX_VALUE;
+				}
+			}
+			
+			if(numberExamsWithoutTimeslot <= minExamWithoutTimeslot) {
+				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
+			}
+			if(minExamWithoutTimeslot < minGlobalConflicts) {
+				minGlobalConflicts = minExamWithoutTimeslot;
+			}
+
+			System.out.println(numberExamsWithoutTimeslot 
+					+ " control " + control
+					+" min " + minExamWithoutTimeslot
+					+ " minGlobal " + minGlobalConflicts);
 
 			System.out.println();
 		}
@@ -182,254 +209,17 @@ public class Generator implements Runnable  {
 		for(Exam e:exams.values()) {
 			solution[e.getId()-1]=e.getTimeSlot().getId();
 		}
-		
-		finish = true;
 	}
-
-
-// cambio soluzione
-	private int[][] solv(int[][] bestSol,int[][]bestSolSoFar,int count){
-		
-		
-		return bestSolSoFar;
-	}
-	
-//	taboList con best
-//	private int[] solv(int[] bestSol, int[] bestSolSoFar, int count) {
-//		 count++;
-//		 if (count == 30) {
-//		 return bestSolSoFar;
-//		 }
-//		int i, j, k, tmp, l, bestI = 0, bestJ = 0,bestEx1=E,bestEx2=E;
-//		int[] sol = new int[E];
-//		int[] saveCurrentGen = new int[E];
-//		boolean status = false;
-//		boolean tabo;
-//		for (k = 0; k < E; k++) {
-//			saveCurrentGen[k] = bestSol[k];
-//		}
-////		for (k = 0; k < E; k++) {
-////			bestSol[k] = 1;
-////		}
-//		for (i = 0; i < E / 2; i++) {
-//			for (j = i + 1; j < E; j++) {
-//				for (k = 0; k < E; k++) {
-//					// funge meglio ma non so dire il perchè
-//					 sol[k] = bestSol[k];
-//					// save the solution that generate the neighborhood
-////					sol[k] = saveCurrentGen[k];
-//				}
-//				tabo = false;
-//				if (sol[i] != sol[j]) {
-//					tmp = sol[i];
-//					sol[i] = sol[j];
-//					sol[j] = tmp;
-//					for (l = 0; l < N; l++) {
-//						if (taboList[l][0] == j || taboList[l][1] == i || taboList[l][2] == sol[i]
-//								|| taboList[l][3] == sol[j]) {
-//							tabo = true;
-//							break;
-//						}
-//					}
-//					// in the taboList? BestSolutionSoFar?
-//					if (!tabo) {
-//						if (hand.oF(bestSol) >= hand.oF(sol)) {
-//							for (k = 0; k < E; k++) {
-//								bestSol[k] = sol[k];
-//							}
-//							if (hand.oF(bestSol) == 0) {
-//								return bestSol;
-//							}
-//							bestI = i;
-//							bestJ = j;
-//							bestEx1=sol[i];
-//							bestEx2=sol[j];
-//						}
-//					}
-//					if (hand.oF(bestSolSoFar) > hand.oF(sol)) {
-//						for (k = 0; k < E; k++) {
-//							bestSol[k] = sol[k];
-//						}
-//						if (hand.oF(bestSol) == 0) {
-//							return bestSol;
-//						}
-//						bestI = i;
-//						bestJ = j;
-//						bestEx1=sol[i];
-//						bestEx2=sol[j];
-//					}
-//				}
-//			}
-//		}
-//		for (l = N - 1; l > 0; l--) {
-//			taboList[l][0] = taboList[l - 1][0];
-//			taboList[l][1] = taboList[l - 1][1];
-//			taboList[l][2] = taboList[l - 1][2];
-//			taboList[l][3] = taboList[l - 1][3];
-//			
-//		}
-//		taboList[0][0] = bestJ;
-//		taboList[0][1] = bestI;
-//		taboList[0][2] = bestEx2;
-//		taboList[0][3] = bestEx1;
-//		if (hand.oF(bestSolSoFar) > hand.oF(bestSol)) {
-//			// bestSol become the bestSolSoFar
-//			bestSolSoFar = solv(bestSol, bestSol, count);
-//			return bestSolSoFar;
-//		}
-//		bestSolSoFar = solv(bestSol, bestSolSoFar, count);
-//		return bestSolSoFar;
-//	}
-	
-	
-	
-	
-//tabo con first
-//	private int[] solv(int[] bestSol, int[] bestSolSoFar, int count) {
-//		count++;
-//		if (count == 3000) {
-//			return bestSolSoFar;
-//		}
-//		int i, j, k, tmp, l;
-//		int[] sol = new int[E];
-//		int[] saveCurrentGen = new int[E];
-//		boolean tabo;
-//		for (k = 0; k < E; k++) {
-//			saveCurrentGen[k] = bestSol[k];
-//		}
-//		 for (k = 0; k < E; k++) {
-//		 bestSol[k] = 1;
-//		 }
-//		for (i = 0; i < E / 2; i++) {
-//			for (j = i + 1; j < E; j++) {
-//				for (k = 0; k < E; k++) {
-//					// funge meglio ma non so dire il perchè
-////					sol[k] = bestSol[k];
-//					// save the solution that generate the neighborhood
-//					 sol[k] = saveCurrentGen[k];
-//				}
-//				tabo = false;
-//				if (sol[i] != sol[j]) {
-//					tmp = sol[i];
-//					sol[i] = sol[j];
-//					sol[j] = tmp;
-//					for (l = 0; l < N; l++) {
-//						if (taboList[l][0] == j && taboList[l][1] == i && taboList[l][2] == sol[i]
-//								&& taboList[l][3] == sol[j]) {
-//							tabo = true;
-//						}
-//					}
-//					// in the taboList? BestSolutionSoFar?
-//					if (!tabo) {
-//						if (hand.oF(bestSol) >= hand.oF(sol)) {
-//							for (k = 0; k < E; k++) {
-//								bestSol[k] = sol[k];
-//							}
-//							if (hand.oF(bestSol) == 0) {
-//								return bestSol;
-//							}
-//							for (l = N - 1; l > 0; l--) {
-//								taboList[l][0] = taboList[l - 1][0];
-//								taboList[l][1] = taboList[l - 1][1];
-//								taboList[l][2] = taboList[l - 1][2];
-//								taboList[l][3] = taboList[l - 1][3];
-//							}
-//							taboList[0][0] = j;
-//							taboList[0][1] = i;
-//							taboList[0][2] = sol[j];
-//							taboList[0][3] = sol[i];
-//
-//							if (hand.oF(bestSolSoFar) > hand.oF(bestSol)) {
-//								// bestSol become the bestSolSoFar
-//								bestSolSoFar = solv(bestSol, bestSol, count);
-//								return bestSolSoFar;
-//							}
-//							bestSolSoFar = solv(bestSol, bestSolSoFar, count);
-//							return bestSolSoFar;
-//						}
-//					}
-//					if (hand.oF(bestSolSoFar) > hand.oF(sol)) {
-//						for (k = 0; k < E; k++) {
-//							bestSol[k] = sol[k];
-//						}
-//						if (hand.oF(bestSol) == 0) {
-//							return bestSol;
-//						}
-//						for (l = N - 1; l > 0; l--) {
-//							taboList[l][0] = taboList[l - 1][0];
-//							taboList[l][1] = taboList[l - 1][1];
-//							taboList[l][2] = taboList[l - 1][2];
-//							taboList[l][3] = taboList[l - 1][3];
-//						}
-//						taboList[0][0] = j;
-//						taboList[0][1] = i;
-//						taboList[0][2] = sol[j];
-//						taboList[0][3] = sol[i];
-//						bestSolSoFar = solv(bestSol, bestSol, count);
-//						return bestSolSoFar;
-//
-//					}
-//				}
-//			}
-//		}
-//		return bestSolSoFar;
-//	}
-	
-//	private int[] solv(int[] etSol,int count) {
-////		count++;
-////		if(count==50)
-////			return etSol;
-//		int sol[],bestSol[];
-//		int k,i,j;
-//		if(hand.oF(etSol)==0) {
-//			return etSol;
-//		}
-//		sol = new int[E];
-//		bestSol = new int[E];
-//
-//		for(int l=0;l<E;l++) {
-//			bestSol[l]=etSol[l];
-//		}
-//		for (i = 0; i < E / 2; i++) {
-//			for (j = i + 1; j < E; j++) {
-//				for (k = 0; k < E; k++) {
-//					sol[k] = etSol[k];
-//				}
-//				if (i != j && sol[i] != sol[j]) {
-//					int tmp;
-//					tmp = sol[i];
-//					sol[i] = sol[j];
-//					sol[j] = tmp;
-//					if (hand.oF(bestSol) > hand.oF(sol)) {
-//						for (k = 0; k < E; k++) {
-//							bestSol[k] = sol[k];
-//						}
-//						if (hand.oF(bestSol) == 0) {
-//							return bestSol;
-//						}
-////						first improvement
-////						if (hand.oF(bestSol) < hand.oF(etSol)) {
-////							bestSol = solv(bestSol, count);
-////							return bestSol;
-////						}
-//					}
-//				}
-//			}
-//		}
-////		search for the best and then iterate
-//		if(hand.oF(bestSol)<hand.oF(etSol)) {
-//			bestSol=solv(bestSol,count);
-//			return bestSol;
-//		}
-//		return etSol;
-//	}
 	
 	public int[] getSolution() {
 		return solution;
 	}
 	
-	public boolean isFinished() {
-		return finish ;
+	private void setTimeSlot() {
+		timeslotsArray = new TimeSlot[T];
+		for(int i = 0; i < T; i++) {
+			timeslotsArray[i] = new TimeSlot(i+1, E);
+		}
 	}
 
 }
