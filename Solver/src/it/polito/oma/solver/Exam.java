@@ -5,7 +5,7 @@ import java.util.*;
 import it.polito.oma.solver.threads.TimeSlot;
 
 public class Exam {
-	private int id;
+	private int id, i;
 	private int enrolledStudents;
 	private boolean taken;
 	private int tabooBuffer = 5;
@@ -15,6 +15,7 @@ public class Exam {
 	private int tabooPosition = 0;
 	private boolean flagIsChanged = false;
 	private TimeSlot tsPrec;
+	private boolean presoPrec=false;
 	
 	
 	public Exam(int id, int enrolledStudents) {
@@ -64,7 +65,7 @@ public class Exam {
 	}
 	
 	public void setTimeSlotPrec(TimeSlot ts) {
-		tsPrec=ts;
+		this.tsPrec=ts;
 	}
 	
 	public TimeSlot getTimeSlotPrec() {
@@ -104,5 +105,23 @@ public class Exam {
 	
 	public boolean getChange() {
 		return flagIsChanged;
+	}
+	
+	public void setPresoPrec() {
+		presoPrec=true;
+	}
+	
+	public void setNoPresoPrec() {
+		presoPrec=false;
+	}
+	
+	public boolean getPresoPrec() {
+		return presoPrec;
+	}
+	
+	public void cleanTabooList() {
+		for(i=0; i<tabooBuffer; i++) {
+			tabooSlot[i]=null;
+		}
 	}
 }

@@ -72,6 +72,7 @@ public class Generator implements Runnable  {
 		Random rand = new Random();
 		int examId;
 		int conflicts;
+		int indexMutation = 2;
 		rand.setSeed(System.nanoTime());
 		
 		System.out.println(numberExamsWithoutTimeslot + " first");
@@ -86,7 +87,7 @@ public class Generator implements Runnable  {
 				if(!exam.getTake()) {
 					examId = exam.getId();
 					if(timeslotsArray[i].isInConflict(examId) == 0) {
-						timeslotsArray[i].addExams(examId, exam);
+						timeslotsArray[i].addExams(exam);
 						exam.setTimeSlot(timeslotsArray[i]);
 						numberExamsWithoutTimeslot--;
 					}
@@ -102,29 +103,47 @@ public class Generator implements Runnable  {
 		 */
 		
 		System.out.println(numberExamsWithoutTimeslot + " before");
+		
 		while(numberExamsWithoutTimeslot > 0) {
 			control++;
 			if(control == 5000) {
+				System.out.println("min: " + minExamWithoutTimeslot
+						+ " global: " + minGlobalConflicts);
 				if(minExamWithoutTimeslot > minGlobalConflicts + 3) {
+					numberExamsWithoutTimeslot = minGlobalConflicts;
+					indexMutation = (indexMutation+1) % 3 + 2;
+					System.out.println("dentro");
+					control = 10000;
 					for(Exam exam:exams.values()) {
-						if(exam.getChange()) {
-							examId = exam.getId();
-							exam.setNoChange();
-							exam.getTimeSlot().subExams(examId, exam);
-							exam.getTimeSlotPrec().addExams(examId, exam);
+						//exam.setNoChange();
+						exam.cleanTabooList();
+						if(exam.getPresoPrec()) {
+							exam.setTake();
+							exam.getTimeSlot().subExams(exam);
+							exam.getTimeSlotPrec().addExams(exam);
 							exam.setTimeSlot(exam.getTimeSlotPrec());
+						}
+						else {
+							if(exam.getTake()) {
+								exam.getTimeSlot().subExams(exam);
+								exam.setNoTake();
+							}
+							
 						}
 					}
 				}
+				else {
+					indexMutation = 2;
+				}
 			}
 			
-			if(control == 5000) {/*Mutation*/
+			if(control == 10000) {/*Mutation*/
 				control = 0;
 				
 				minExamWithoutTimeslot = Integer.MAX_VALUE;
 				
 				/**
-				 * For each exam, this loop probably (1/3) change the state of an exam, if the exam is
+				 * For each exam, this loop probably (1/2) change the state of an exam, if the exam is
 				 * in a timeslot and there are no conflicts with other timeslots
 				 */
 				for(Exam exam:exams.values()) {
@@ -133,7 +152,7 @@ public class Generator implements Runnable  {
 						for(int i = 0; i < T; i++) {/*Search a free timeslot*/
 							if(timeslotsArray[i].getNumberOfConflicts(examId) == 0
 									&& !exam.checkTaboo(timeslotsArray[i])) {
-								if(rand.nextInt(2) == 0) {
+								if(rand.nextInt(indexMutation) == 0 && exam.getTimeSlot() != timeslotsArray[i]) {
 									mutationFlag = true;
 									timeslotChange = timeslotsArray[i];
 								}
@@ -141,11 +160,13 @@ public class Generator implements Runnable  {
 						}
 						if(mutationFlag) {
 							mutationFlag = false;
-							exam.setChange();
-							exam.setTimeSlotPrec(exam.getTimeSlot());
-							exam.getTimeSlot().subExams(examId, exam);
+							//exam.setChange();
+							exam.getTimeSlot().subExams(exam);
 							exam.setTimeSlot(timeslotChange);
-							timeslotChange.addExams(examId, exam);
+							timeslotChange.addExams(exam);
+//							System.out.println("Mutation exam " + exam.getId() + " ->"
+//									+ " Timeslot prec: " + exam.getTimeSlotPrec().getId()
+//									+ " -> Timeslot: " + exam.getTimeSlot().getId());
 						}
 					}
 				}
@@ -180,30 +201,40 @@ public class Generator implements Runnable  {
 					 */
 					for(int i = 0; i < listExamWithoutTimeslot.size(); i++) {
 						int examIdWithoutTimeslot = listExamWithoutTimeslot.get(i);
-						timeslotChange.subExams(examIdWithoutTimeslot, exams.get(examIdWithoutTimeslot));
+						timeslotChange.subExams(exams.get(examIdWithoutTimeslot));
 						numberExamsWithoutTimeslot++;
 						exams.get(examIdWithoutTimeslot).setTaboo(timeslotChange);
 					}
-					timeslotChange.addExams(examId, exam);
+					timeslotChange.addExams(exam);
 					exam.setTimeSlot(timeslotChange);
 					numberExamsWithoutTimeslot--;
 					minConflicts = Integer.MAX_VALUE;
 				}
 			}
 			
-			if(numberExamsWithoutTimeslot <= minExamWithoutTimeslot) {
+			if(numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 			}
+			
 			if(minExamWithoutTimeslot < minGlobalConflicts) {
 				minGlobalConflicts = minExamWithoutTimeslot;
+				for(Exam exam:exams.values()) {
+					if(exam.getTake()) {
+						exam.setPresoPrec();
+						exam.setTimeSlotPrec(exam.getTimeSlot());
+					}
+					else{
+						exam.setNoPresoPrec();
+					}
+				}
 			}
 
-			System.out.println(numberExamsWithoutTimeslot 
-					+ " control " + control
-					+" min " + minExamWithoutTimeslot
-					+ " minGlobal " + minGlobalConflicts);
-
-			System.out.println();
+//			System.out.println(numberExamsWithoutTimeslot 
+//					+ " control " + control
+//					+ " min " + minExamWithoutTimeslot
+//					+ " minGlobal " + minGlobalConflicts);
+//
+//			System.out.println();
 		}
 		
 		for(Exam e:exams.values()) {

@@ -34,11 +34,19 @@ public class TimeSlot {
 		return 1;
 	}
 	
-	public void addExams(int position, Exam exam) {
-		exams.put(position, exam);
+	public void addExams(Exam exam) {
+		exams.put(exam.getId(), exam);
 		exam.setTake();
 		for(Exam examInConflict:exam.getExamConflict()) {
 			this.addConflict(examInConflict.getId());
+		}
+	}
+
+	public void subExams(Exam exam) {
+		exams.remove(exam.getId());
+		exam.setNoTake();
+		for(Exam examInConflict:exam.getExamConflict()) {
+			this.subConflict(examInConflict.getId());
 		}
 	}
 	
@@ -48,14 +56,6 @@ public class TimeSlot {
 	
 	public Map<Integer, Exam> getExams() {
 		return exams;
-	}
-	
-	public void subExams(int position, Exam exam) {
-		exams.remove(position);
-		exam.setNoTake();
-		for(Exam examInConflict:exam.getExamConflict()) {
-			this.subConflict(examInConflict.getId());
-		}
 	}
 	
 }
