@@ -24,8 +24,8 @@ public class Generator implements Runnable  {
 	private int	minExamWithoutTimeslot = 0,
 				minConflicts = Integer.MAX_VALUE,
 				minGlobalConflicts = Integer.MAX_VALUE;
-	private long control = 0;
-
+	private long control = 0, controlMut=0;
+	private int variabileDiTest=0, j=0;
 	//Solution vector
 	private int[] solution;
 	
@@ -105,40 +105,68 @@ public class Generator implements Runnable  {
 		System.out.println(numberExamsWithoutTimeslot + " before");
 		
 		while(numberExamsWithoutTimeslot > 0) {
-			control++;
-			if(control == 5000) {
-				System.out.println("min: " + minExamWithoutTimeslot
-						+ " global: " + minGlobalConflicts);
-				if(minExamWithoutTimeslot > minGlobalConflicts + 3) {
-					numberExamsWithoutTimeslot = minGlobalConflicts;
-					indexMutation = (indexMutation+1) % 3 + 2;
-					System.out.println("dentro");
-					control = 10000;
-					for(Exam exam:exams.values()) {
-						//exam.setNoChange();
-						exam.cleanTabooList();
-						if(exam.getPresoPrec()) {
-							exam.setTake();
-							exam.getTimeSlot().subExams(exam);
-							exam.getTimeSlotPrec().addExams(exam);
-							exam.setTimeSlot(exam.getTimeSlotPrec());
-						}
-						else {
-							if(exam.getTake()) {
-								exam.getTimeSlot().subExams(exam);
-								exam.setNoTake();
-							}
-							
-						}
-					}
-				}
-				else {
-					indexMutation = 2;
-				}
-			}
+//			control++;
+//			if(control == 5000) {
+//				System.out.println("min: " + minExamWithoutTimeslot
+//						+ " global: " + minGlobalConflicts);
+//				if(minExamWithoutTimeslot > minGlobalConflicts + 5) {
+//					numberExamsWithoutTimeslot = minGlobalConflicts;
+//					indexMutation = (indexMutation+1) % 3 + 2;
+//					System.out.println("dentro");
+//					control = 10000;
+//					for(Exam exam:exams.values()) {
+//						//exam.setNoChange();
+//						exam.cleanTabooList();
+//						if(exam.getPresoPrec()) {
+//							exam.setTake();
+//							exam.getTimeSlot().subExams(exam);
+//							exam.getTimeSlotPrec().addExams(exam);
+//							exam.setTimeSlot(exam.getTimeSlotPrec());
+//						}
+//						else {
+//							if(exam.getTake()) {
+//								exam.getTimeSlot().subExams(exam);
+//								exam.setNoTake();
+//							}
+//							
+//						}
+//					}
+//				}
+//				else {
+//					indexMutation = 2;
+//				}
+//			}
+//			System.out.println(control);
 			
-			if(control == 10000) {/*Mutation*/
+			if(control == 30000) {/*Mutation*/
 				control = 0;
+//				controlMut++;
+//				if(controlMut==20) {
+//					controlMut=0;
+//					indexMutation=rand.nextInt(5)+1;
+//					for(Exam e:exams.values()) {
+//						if(e.getTake()) {
+//							if(rand.nextInt(50)==1) {
+//								e.setNoTake();
+//								e.getTimeSlot().subExams(e);
+//								numberExamsWithoutTimeslot++;
+//								e.setTaboo(e.getTimeSlot());
+//								e.setTimeSlot(null);
+//							}
+//						}
+//						else {
+//							for(j=0; j<T; j++) {
+//								if(timeslotsArray[j].isInConflict(e.getId())==0 && e.getTake()==false && rand.nextInt(2)==1 && e.checkTaboo(timeslotsArray[j])==false) {
+//									e.setTake();
+//									e.setTimeSlot(timeslotsArray[j]);
+//									timeslotsArray[j].addExams(e);
+//									numberExamsWithoutTimeslot--;
+//								}
+//							}
+//						}
+//					}
+//					variabileDiTest=numberExamsWithoutTimeslot;
+//				}
 				
 				minExamWithoutTimeslot = Integer.MAX_VALUE;
 				
@@ -152,7 +180,7 @@ public class Generator implements Runnable  {
 						for(int i = 0; i < T; i++) {/*Search a free timeslot*/
 							if(timeslotsArray[i].getNumberOfConflicts(examId) == 0
 									&& !exam.checkTaboo(timeslotsArray[i])) {
-								if(rand.nextInt(indexMutation) == 0 && exam.getTimeSlot() != timeslotsArray[i]) {
+								if(rand.nextInt(indexMutation) == 0) {
 									mutationFlag = true;
 									timeslotChange = timeslotsArray[i];
 								}
@@ -162,8 +190,14 @@ public class Generator implements Runnable  {
 							mutationFlag = false;
 							//exam.setChange();
 							exam.getTimeSlot().subExams(exam);
+							exam.setTaboo(exam.getTimeSlot());
 							exam.setTimeSlot(timeslotChange);
 							timeslotChange.addExams(exam);
+							for(Exam e:exams.values()) {
+								if(e.getId()!=exam.getId()) {
+									e.setTaboo(null);
+								}
+							}
 //							System.out.println("Mutation exam " + exam.getId() + " ->"
 //									+ " Timeslot prec: " + exam.getTimeSlotPrec().getId()
 //									+ " -> Timeslot: " + exam.getTimeSlot().getId());
@@ -204,6 +238,11 @@ public class Generator implements Runnable  {
 						timeslotChange.subExams(exams.get(examIdWithoutTimeslot));
 						numberExamsWithoutTimeslot++;
 						exams.get(examIdWithoutTimeslot).setTaboo(timeslotChange);
+						for(Exam e:exams.values()) {
+							if(e.getId()!=exam.getId()) {
+								e.setTaboo(null);
+							}
+						}
 					}
 					timeslotChange.addExams(exam);
 					exam.setTimeSlot(timeslotChange);
@@ -214,27 +253,33 @@ public class Generator implements Runnable  {
 			
 			if(numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
+				control=0;
+			}
+			else {
+				control++;
 			}
 			
 			if(minExamWithoutTimeslot < minGlobalConflicts) {
 				minGlobalConflicts = minExamWithoutTimeslot;
-				for(Exam exam:exams.values()) {
-					if(exam.getTake()) {
-						exam.setPresoPrec();
-						exam.setTimeSlotPrec(exam.getTimeSlot());
-					}
-					else{
-						exam.setNoPresoPrec();
-					}
-				}
+//				for(Exam exam:exams.values()) {
+//					if(exam.getTake()) {
+//						exam.setPresoPrec();
+//						exam.setTimeSlotPrec(exam.getTimeSlot());
+//					}
+//					else{
+//						exam.setNoPresoPrec();
+//					}
+//				}
 			}
+			
 
-//			System.out.println(numberExamsWithoutTimeslot 
-//					+ " control " + control
-//					+ " min " + minExamWithoutTimeslot
-//					+ " minGlobal " + minGlobalConflicts);
-//
-//			System.out.println();
+			System.out.println(numberExamsWithoutTimeslot 
+					+ " control " + control
+					+ " min " + minExamWithoutTimeslot
+					+ " minGlobal " + minGlobalConflicts
+					+" examMut " + variabileDiTest);
+
+			System.out.println();
 		}
 		
 		for(Exam e:exams.values()) {
