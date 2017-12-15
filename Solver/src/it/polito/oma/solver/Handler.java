@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 10;
+	private int THREADS_NUMBER = 1;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -29,24 +29,21 @@ public class Handler {
 	private int T;
 	
 	//Obj function parameters
-	private int conflictWeight[][];
-	private int p[] = new int[PENALTIES];
-	private int conflict[][][];
-	private int etSol[];	
+	private int[][] conflictWeight;
+	private int[] p = new int[PENALTIES];
+	private int[][][] conflict;
+	private int[] etSol;
 	
 	/**
 	 * This method loads all the instances into local variables.
 	 * @param path The path of all the files to load
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
 	 */
-	public void loadInstance(String path) {
-		try {
-			loadExams(path + ".exm");
-			loadStudents(path + ".stu");
-			loadTimeslot(path + ".slo");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void loadInstance(String path) throws FileNotFoundException, IOException {
+		loadExams(path + ".exm");
+		loadStudents(path + ".stu");
+		loadTimeslot(path + ".slo");
 	}
 	
 	/**
@@ -58,6 +55,7 @@ public class Handler {
 	private void loadExams(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
+			.filter(s -> s.compareTo("") != 0)
 			.map(l -> l.split(" "))
 			.forEach(i -> {
 				int id = Integer.valueOf(i[0]);
@@ -77,6 +75,7 @@ public class Handler {
 	private void loadTimeslot(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
+			.filter(s -> s.compareTo("") != 0)
 			.map(l -> l.split(" "))
 			.forEach(i -> {
 				T = Integer.valueOf(i[0]);
@@ -93,6 +92,7 @@ public class Handler {
 	private void loadStudents(String path) throws FileNotFoundException, IOException {
 		try(BufferedReader r = new BufferedReader(new FileReader(path))) {
 			r.lines()
+			.filter(s -> s.compareTo("") != 0)
 			.map(l -> l.split(" "))
 			.forEach(i -> {
 				int sID = Integer.valueOf(i[0].replaceAll("s", ""));
@@ -109,11 +109,17 @@ public class Handler {
 		S = students.size();
 	}
 	
-	public void writeSolution(String path) throws IOException {
-		String fileName = path + GROUP;
+	/**
+	 * This method writes a solution into a file
+	 * @param instanceName The name of the running instance
+	 * @throws IOException
+	 */
+	public void writeSolution(String instanceName) throws IOException {
+		String fileName = instanceName + GROUP;
+		if(! checkFeasibility()) return; // If the solution is not feasible, do not write the file
 		try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
 			for(int i = 0; i < E; ++i) {
-				String s = String.format("%04d %d\n", i+1, etSol[i]);
+				String s = String.format("%04d%d\n", i+1, etSol[i]);
 				r.write(s);
 			}
 		}
@@ -127,23 +133,10 @@ public class Handler {
 		conflict = new int[E][E][PENALTIES];
 		etSol = new int[E];
 		setPenalties();
-		
-//		for(int i = 0; i < PENALTIES; ++i)
-//			System.out.println(penalty[i]);
-//		System.out.println();
-		
 		buildConflictWeight();
-		
-//		for(int i = 0; i < examsNumber; ++i) {
-//			for(int j = 0; j < examsNumber; ++j)
-//				System.out.print(mutualExclusion[i][j] + " ");
-//			System.out.println();
-//		}
-		
-		/* Test instance solution */
-		
+
 		/*
-		 * Create three threads.
+		 * Threads creation
 		 */
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
@@ -159,8 +152,6 @@ public class Handler {
 			 */
 			while(t[i].getState() != Thread.State.TERMINATED);
 			etSol = generators[i].getSolution();
-			/*for(int j:etSol)
-				System.out.println(j);*/
 			if(checkFeasibility()) {
 				buildDistancies();
 				System.out.println("Objective function value: " + objectiveFunction());
@@ -171,7 +162,7 @@ public class Handler {
 	}
 	
 	/**
-	 * This method set the penalties vector, due to the mutual distance
+	 * This method sets the penalties vector, due to the mutual distance
 	 * between two exams.
 	 */
 	private void setPenalties() {
@@ -213,19 +204,25 @@ public class Handler {
 	}
 	
 	/**
-	 * This method check the feasibility of the founded solution.
+	 * This method checks the feasibility of the founded solution.
 	 * @return true if the solution is feasible, false otherwise.
 	 */
 	public boolean checkFeasibility() {
-		for(int i = 0; i < E; ++i)
-			for(int j = 0; j < E; ++j)
+		for(int i = 0; i < E; ++i) {
+			if(etSol[i] < 1 || etSol[i] > T) // Invalid timeslot
+				return false;
+			for(int j = 0; j < E; ++j) {
+				if(etSol[j] < 1 || etSol[j] > T)  // Invalid timeslot
+					return false;
 				if(etSol[i] == etSol[j] && conflictWeight[i][j] > 0) // Exam in the same timeslot and students in conflict
 					return false;
+			}
+		}
 		return true;
 	}
 	
 	/**
-	 * This method describe the objective function and resolve it, with the current solution
+	 * This method describes the objective function and resolve it, for the current solution
 	 * @return result of the objective function.
 	 */
 	public double objectiveFunction() {
