@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import it.polito.oma.solver.threads.Generator;
+import it.polito.oma.solver.threads.GraphColoring;
 
 public class Handler {
 	private int PENALTIES = 5;
@@ -133,6 +134,20 @@ public class Handler {
 		
 		buildConflictWeight();
 		
+		GraphColoring g = new GraphColoring(E);
+		
+		for(int i = 0; i < E; i++) {
+			for(int j = i+1; j < E; j++) {
+				if(conflictWeight[i][j] > 0)
+					g.addEdge(i, j);
+			}
+		}
+		g.greedyColoring();
+		etSol = g.getResult();
+		buildDistancies();
+		
+		System.out.println("Check " + checkFeasibility() + " " + objectiveFunction());
+		
 //		for(int i = 0; i < examsNumber; ++i) {
 //			for(int j = 0; j < examsNumber; ++j)
 //				System.out.print(mutualExclusion[i][j] + " ");
@@ -144,29 +159,29 @@ public class Handler {
 		/*
 		 * Create three threads.
 		 */
-		Generator[] generators = new Generator[THREADS_NUMBER];
-		Thread t[] = new Thread[THREADS_NUMBER];
-		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, E, conflictWeight);
-			t[i] = new Thread(generators[i]);
-			t[i].start();
-		}
-
-		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			/*
-			 * For each thread, wait for a solution, then check feasibility
-			 */
-			while(t[i].getState() != Thread.State.TERMINATED);
-			etSol = generators[i].getSolution();
-			/*for(int j:etSol)
-				System.out.println(j);*/
-			if(checkFeasibility()) {
-				buildDistancies();
-				System.out.println("Objective function value: " + objectiveFunction());
-			} else {
-				System.out.println("Unfeasible solution");
-			}
-		}
+//		Generator[] generators = new Generator[THREADS_NUMBER];
+//		Thread t[] = new Thread[THREADS_NUMBER];
+//		for(int i = 0; i < THREADS_NUMBER; ++i) {
+//			generators[i] = new Generator(T, E, conflictWeight);
+//			t[i] = new Thread(generators[i]);
+//			t[i].start();
+//		}
+//
+//		for(int i = 0; i < THREADS_NUMBER; ++i) {
+//			/*
+//			 * For each thread, wait for a solution, then check feasibility
+//			 */
+//			while(t[i].getState() != Thread.State.TERMINATED);
+//			etSol = generators[i].getSolution();
+//			/*for(int j:etSol)
+//				System.out.println(j);*/
+//			if(checkFeasibility()) {
+//				buildDistancies();
+//				System.out.println("Objective function value: " + objectiveFunction());
+//			} else {
+//				System.out.println("Unfeasible solution");
+//			}
+//		}
 	}
 	
 	/**

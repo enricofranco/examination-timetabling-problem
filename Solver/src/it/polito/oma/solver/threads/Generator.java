@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ public class Generator implements Runnable  {
 	private int totExm;
 	private int[][] conflicts;
 	private int[] isSelected;
+	private int[] nSelection;
 	private Random rand = new Random();
 
 	List<ArrayList<Integer>> buckets;
@@ -36,7 +38,7 @@ public class Generator implements Runnable  {
 		this.solution = new int[E];
 		this.rand.setSeed(System.nanoTime());
 		this.isSelected = new int[E];
-		
+		this.nSelection = new int[E];
 	}
 	
 	@Override
@@ -66,16 +68,16 @@ public class Generator implements Runnable  {
 			l = new ArrayList<>();
 			timeslots.add(l);
 		}
-		solver(0, 0, buckets.get(0).size());
-		solver(0, buckets.get(0).size(), T);
-		for(ArrayList<Integer> a:timeslots) {
-			for(Integer I:a) {
-				System.out.print(I + " ");
-			}
-			System.out.println();
-		}
-		
-		System.out.println(totExm);
+		//solver(0, 0, buckets.get(0).size());
+		//solver(0, buckets.get(0).size(), T);
+//		for(ArrayList<Integer> a:timeslots) {
+//			for(Integer I:a) {
+//				System.out.print(I + " ");
+//			}
+//			System.out.println();
+//		}
+//		
+//		System.out.println(totExm);
 	}
 	
 	private List<ArrayList<Integer>> setBuckets() {
@@ -87,18 +89,21 @@ public class Generator implements Runnable  {
 			if(!bucket.containsKey(i)) {
 				list = new ArrayList<Integer>();
 				list.add(i);
+				nSelection[i] = 1;
 				bucket.put(i, list);
 				
 			}
 			else {
 				list = bucket.get(i);
 				list.add(i);
+				nSelection[i] = 1;
 			}
 			for(int j = 0; j < E; j++) {
 				if(conflicts[i][j] > 0 || conflicts[j][i] > 0) {
 					if(!bucket.containsKey(j)) {
 						list = new ArrayList<Integer>();
 						list.add(i);
+						nSelection[i] = 1;
 						bucket.put(j, list);
 					}
 					else {
@@ -112,6 +117,7 @@ public class Generator implements Runnable  {
 						}
 						if(selected) {
 							list.add(i);
+							nSelection[i] = 1;
 						}
 					}
 				}
@@ -119,7 +125,7 @@ public class Generator implements Runnable  {
 		}
 		
 		return bucket.values().stream()
-				.sorted((s1, s2) -> Integer.compare(s2.size(), s1.size()))
+//				.sorted((s1, s2) -> Integer.compare(s2.size(), s1.size()))
 				.collect(Collectors.toList());
 		
 	}
@@ -225,7 +231,7 @@ public class Generator implements Runnable  {
 				r.write(s);
 			}
 			
-			r.write(Integer.toString(buckets.get(0).size()));
+			r.write(Integer.toString(buckets.size()));
 		}
 	}
 
