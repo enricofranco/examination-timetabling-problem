@@ -76,25 +76,6 @@ public class Exam {
 		return timeSlot;
 	}
 	
-	public void setTaboo(TimeSlot ts) {
-		tabooSlot[tabooPosition]=ts;
-		tabooPosition++;
-		if(tabooPosition>=tabooBuffer) {
-			tabooPosition=0;
-		}
-	}
-	
-	public boolean checkTaboo(TimeSlot ts) {
-		for(int i=0; i<tabooBuffer; i++) {
-			if(tabooSlot[i]!=null) {
-				if(tabooSlot[i].getId()==ts.getId()) {
-					return true;
-				}
-			}	
-		}
-		return false;
-	}
-	
 	public void setChange() {
 		flagIsChanged = true;
 	}
@@ -117,11 +98,5 @@ public class Exam {
 	
 	public boolean getPresoPrec() {
 		return presoPrec;
-	}
-	
-	public void cleanTabooList() {
-		for(i=0; i<tabooBuffer; i++) {
-			tabooSlot[i]=null;
-		}
 	}
 }

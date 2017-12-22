@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 1;
+	private int THREADS_NUMBER = 3;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -167,10 +167,11 @@ public class Handler {
 			if(checkFeasibility()) {
 				buildDistancies();
 				System.out.println("Objective function value: " + objectiveFunction()+" tempo "
-						+ ""+(System.nanoTime()-time)/1000000000);
+						+ ""+((float)System.nanoTime()-time)/1000000000);
 			} else {
 				System.out.println("Unfeasible solution " + totalConflicts(solution));
-				System.out.println("." + this.totalConflicts(solution)+" tempo "+(System.nanoTime()-time)/1000000000);
+				System.out.println("." + this.totalConflicts(solution)+" tempo "
+						+ ""+(float)(System.nanoTime()-time)/1000000000);
 			}
 		}
 	}
