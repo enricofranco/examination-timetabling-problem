@@ -146,6 +146,7 @@ public class Handler {
 		 */
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
+		long time=System.nanoTime();
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			generators[i] = new Generator(T, exams, conflictWeight);
 			t[i] = new Thread(generators[i]);
@@ -165,10 +166,11 @@ public class Handler {
 			
 			if(checkFeasibility()) {
 				buildDistancies();
-				System.out.println("Objective function value: " + objectiveFunction());
+				System.out.println("Objective function value: " + objectiveFunction()+" tempo "
+						+ ""+(System.nanoTime()-time)/1000000000);
 			} else {
 				System.out.println("Unfeasible solution " + totalConflicts(solution));
-				System.out.println("." + this.totalConflicts(solution));
+				System.out.println("." + this.totalConflicts(solution)+" tempo "+(System.nanoTime()-time)/1000000000);
 			}
 		}
 	}
