@@ -13,6 +13,7 @@ public class Generator implements Runnable {
 	private int T;
 	private TimeSlot[] timeslotsArray;
 	private TimeSlot timeslotChange;
+	private TimeSlot[]timeslotAvaible;
 
 	// Exams
 	private Map<Integer, Exam> examsInit;
@@ -27,6 +28,7 @@ public class Generator implements Runnable {
 	private int variabileDiTest = 0, j = 0;
 	// Solution vector
 	private int[] solution;
+	private int ti=0;
 
 	/*
 	 * Set variables into the random generator
@@ -35,6 +37,7 @@ public class Generator implements Runnable {
 		this.T = T;
 		this.E = exams.size();
 		this.examsInit = new TreeMap<Integer, Exam>();
+		this.timeslotAvaible=new TimeSlot[E];
 		for (Integer i : exams.keySet()) {
 			Exam exam = exams.get(i);
 			Exam e = new Exam(i, exam.getEnrolledStudents());
@@ -124,27 +127,32 @@ public class Generator implements Runnable {
 
 		while (numberExamsWithoutTimeslot > 0) {
 
-			if (control == 10000) {/* Mutation */
+			if (control == 1000) {/* Mutation */
 				 control = 0;
 
 				/**
 				 * For each exam, this loop probably (1/2) change the state of an exam, if the
 				 * exam is in a timeslot and there are no conflicts with other timeslots
 				 */
+				ti=0;
 				for (Exam exam : exams.values()) {
 					examId = exam.getId();
 					if (exam.getTake()) {
 						for (int i = 0; i < T; i++) {/* Search a free timeslot */
 							if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
 									&& !exam.checkTaboo(timeslotsArray[i])) {
-//								if (rand.nextInt(indexMutation) == 0) {
+								if (rand.nextInt(indexMutation) == 0) {
 									mutationFlag = true;
-									timeslotChange = timeslotsArray[i];
-//								}
+//									timeslotChange = timeslotsArray[i];
+									timeslotAvaible[ti]=timeslotsArray[i];
+									ti++;
+								}
 							}
 						}
 						if (mutationFlag) {
 							mutationFlag = false;
+							timeslotChange=timeslotAvaible[rand.nextInt(ti)];
+							ti=0;
 							exam.getTimeSlot().subExams(exam);
 							exam.setTaboo(exam.getTimeSlot());
 							exam.setTimeSlot(timeslotChange);
@@ -221,6 +229,16 @@ public class Generator implements Runnable {
 			if (numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 				control = 0;
+				if (minExamWithoutTimeslot < minGlobalConflicts+3) {
+					control=-2000;
+				}
+				if (minExamWithoutTimeslot <= 3) {
+					control=-10000;
+				}
+				if (minExamWithoutTimeslot <= 1) {
+					control=-20000;
+				}
+				
 			} else {
 //				if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
 //					maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
@@ -234,10 +252,10 @@ public class Generator implements Runnable {
 				control = 0;
 			}
 
-			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
-					+ " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
-
-			System.out.println();
+//			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
+//					+ " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
+//
+//			System.out.println();
 		}
 
 		for (Exam e : exams.values()) {

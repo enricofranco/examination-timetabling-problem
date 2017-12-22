@@ -8,7 +8,7 @@ public class Exam {
 	private int id, i;
 	private int enrolledStudents;
 	private boolean taken;
-	private int tabooBuffer = 70;
+	private int tabooBuffer = 100;
 	private TimeSlot timeSlot;
 	private List<Exam> examsInConflict = new ArrayList<Exam>();
 	private TimeSlot[] tabooSlot = new TimeSlot[tabooBuffer];
