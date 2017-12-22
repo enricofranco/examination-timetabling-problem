@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 1;
+	private int THREADS_NUMBER = 3;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -32,7 +32,7 @@ public class Handler {
 	private int[][] conflictWeight;
 	private int[] p = new int[PENALTIES];
 	private int[][][] conflict;
-	private int[] etSol;
+	private int[] solution;
 	
 	/**
 	 * This method loads all the instances into local variables.
@@ -119,7 +119,7 @@ public class Handler {
 		if(! checkFeasibility()) return; // If the solution is not feasible, do not write the file
 		try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
 			for(int i = 0; i < E; ++i) {
-				String s = String.format("%04d%d\n", i+1, etSol[i]);
+				String s = String.format("%04d %d\n", i+1, solution[i]);
 				r.write(s);
 			}
 		}
@@ -131,7 +131,7 @@ public class Handler {
 	public void initialize() {
 		conflictWeight = new int[E][E];
 		conflict = new int[E][E][PENALTIES];
-		etSol = new int[E];
+		solution = new int[E];
 		setPenalties();
 		buildConflictWeight();
 
@@ -140,8 +140,9 @@ public class Handler {
 		 */
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
+		long time=System.nanoTime();
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, students);
+			generators[i] = new Generator(T, exams, conflictWeight);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 		}
@@ -151,18 +152,41 @@ public class Handler {
 			 * For each thread, wait for a solution, then check feasibility
 			 */
 			while(t[i].getState() != Thread.State.TERMINATED);
-			etSol = generators[i].getSolution();
+			solution = generators[i].getSolution();
 			if(checkFeasibility()) {
 				buildDistancies();
-				System.out.println("Objective function value: " + objectiveFunction());
+				System.out.println("Objective function value: " + objectiveFunction()+" tempo "
+						+ ""+((float)System.nanoTime()-time)/1000000000);
 			} else {
-				System.out.println("Unfeasible solution");
+				System.out.println("Unfeasible solution " + totalConflicts(solution));
+				System.out.println("." + this.totalConflicts(solution)+" tempo "
+						+ ""+(float)(System.nanoTime()-time)/1000000000);
 			}
 		}
 	}
 	
 	/**
-	 * This method sets the penalties vector, due to the mutual distance
+	 * this method returns the sum of all conflicts in the partial solution
+	 * @param solution the solution vector
+	 * @return number of conflicts
+	 */
+	public int totalConflicts(int [] solution) {
+		int conflicts=0;
+		int i, j;
+		for(i = 0; i < E; i++) {
+			for(j = 0; j < E; j++) {
+				if(solution[i] == solution[j] && i != j) {
+					if(conflictWeight[i][j] > 0)
+						conflicts++;
+				}
+			}
+		}
+		
+		return conflicts;
+	}
+	
+	/**
+	 * This method set the penalties vector, due to the mutual distance
 	 * between two exams.
 	 */
 	private void setPenalties() {
@@ -181,8 +205,16 @@ public class Handler {
 					for(Exam e1 : l)
 						for(Exam e2 : l) {
 							int i = e1.getId(), j = e2.getId();
-							if(i < j)
+							if(i < j) {
 								conflictWeight[i-1][j-1]++;
+								conflictWeight[j-1][i-1]++;
+								if(!e1.searchConflictWithExam(e2)) {
+									e1.addExamConflict(e2);
+								}
+								if(!e2.searchConflictWithExam(e1)) {
+									e2.addExamConflict(e1);
+								}
+							}
 						}
 			});
 	}
@@ -195,7 +227,7 @@ public class Handler {
 		for(int i = 0; i < E; ++i) {
 			for(int j = 0; j < E; ++j) {
 				if(i < j) {	// Fill only the upper part of the matrix
-					int k = Math.abs(etSol[i] - etSol[j]); // Distance
+					int k = Math.abs(solution[i] - solution[j]); // Distance
 					if(k <= PENALTIES && k != 0) // Overlapping exams already checked
 						conflict[i][j][k-1] = 1;
 				}
@@ -209,12 +241,12 @@ public class Handler {
 	 */
 	public boolean checkFeasibility() {
 		for(int i = 0; i < E; ++i) {
-			if(etSol[i] < 1 || etSol[i] > T) // Invalid timeslot
+			if(solution[i] < 1 || solution[i] > T) // Invalid timeslot
 				return false;
 			for(int j = 0; j < E; ++j) {
-				if(etSol[j] < 1 || etSol[j] > T)  // Invalid timeslot
+				if(solution[j] < 1 || solution[j] > T)  // Invalid timeslot
 					return false;
-				if(etSol[i] == etSol[j] && conflictWeight[i][j] > 0) // Exam in the same timeslot and students in conflict
+				if(solution[i] == solution[j] && conflictWeight[i][j] > 0) // Exam in the same timeslot and students in conflict
 					return false;
 			}
 		}
