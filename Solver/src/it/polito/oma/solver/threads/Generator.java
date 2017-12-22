@@ -15,6 +15,7 @@ public class Generator implements Runnable {
 	private TimeSlot timeslotChange;
 
 	// Exams
+	private Map<Integer, Exam> examsInit;
 	private Map<Integer, Exam> exams;
 	private int E;
 	private int numberExamsWithoutTimeslot = 0;
@@ -33,17 +34,17 @@ public class Generator implements Runnable {
 	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts) {
 		this.T = T;
 		this.E = exams.size();
-		this.exams = new TreeMap<Integer, Exam>();
+		this.examsInit = new TreeMap<Integer, Exam>();
 		for (Integer i : exams.keySet()) {
 			Exam exam = exams.get(i);
 			Exam e = new Exam(i, exam.getEnrolledStudents());
-			this.exams.put(i, e);
+			this.examsInit.put(i, e);
 			// System.out.println(this.exams.get(i).getId() + " " +
 			// this.exams.get(i).getEnrolledStudents());
 		}
-		for (Exam e1 : this.exams.values()) {
+		for (Exam e1 : this.examsInit.values()) {
 			int id1 = e1.getId() - 1;
-			for (Exam e2 : this.exams.values()) {
+			for (Exam e2 : this.examsInit.values()) {
 				int id2 = e2.getId() - 1;
 				if (conflicts[id1][id2] > 0) {
 					if (!e1.searchConflictWithExam(e2)) {
@@ -56,7 +57,7 @@ public class Generator implements Runnable {
 			}
 		}
 		this.solution = new int[E];
-
+		this.exams=new LinkedHashMap<Integer,Exam>();
 		numberExamsWithoutTimeslot = E;
 		minExamWithoutTimeslot = E;
 
@@ -68,6 +69,9 @@ public class Generator implements Runnable {
 		/**
 		 * set random parameters
 		 */
+		
+		
+		int[] examRandom = new int[E];
 		Random rand = new Random();
 		int examId;
 		int conflicts;
@@ -77,6 +81,19 @@ public class Generator implements Runnable {
 		int maxExamWithoutTimeslot = 0;
 		rand.setSeed(System.nanoTime());
 
+		for(int i = 0; i < E; ++i) {
+			examRandom[i] = i+1;
+		}
+		for(int i = 0; i < E; ++i) {
+			int r = rand.nextInt(E-i);
+			Exam e = examsInit.get(examRandom[r]);
+			exams.put(e.getId(), e);
+			examRandom[r] = examRandom[E-1-i];
+		}
+		for(Exam e:exams.values()) {
+			System.out.print(e.getId()+" ");
+		}
+//		System.out.println("");
 		System.out.println(numberExamsWithoutTimeslot + " first");
 
 		/**
@@ -107,10 +124,8 @@ public class Generator implements Runnable {
 
 		while (numberExamsWithoutTimeslot > 0) {
 
-			if (control == 5000) {/* Mutation */
-				// control = 0;
-
-				minExamWithoutTimeslot = Integer.MAX_VALUE;
+			if (control == 10000) {/* Mutation */
+				 control = 0;
 
 				/**
 				 * For each exam, this loop probably (1/2) change the state of an exam, if the
@@ -122,10 +137,10 @@ public class Generator implements Runnable {
 						for (int i = 0; i < T; i++) {/* Search a free timeslot */
 							if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
 									&& !exam.checkTaboo(timeslotsArray[i])) {
-								if (rand.nextInt(indexMutation) == 0) {
+//								if (rand.nextInt(indexMutation) == 0) {
 									mutationFlag = true;
 									timeslotChange = timeslotsArray[i];
-								}
+//								}
 							}
 						}
 						if (mutationFlag) {
@@ -140,10 +155,14 @@ public class Generator implements Runnable {
 								}
 							}
 						}
+						
 					}
 				}
 				maxExamWithoutTimeslot = 0;
 				minExamWithoutTimeslot = Integer.MAX_VALUE;
+				 
+				 
+				 
 			}
 
 			/**
@@ -165,16 +184,6 @@ public class Generator implements Runnable {
 						if (calcoloMinimo < minGlobalConflicts) {
 							minConflicts = conflicts;
 							timeslotChange = timeslotsArray[i];
-							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpweoiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
 //							System.out.println("oiwegnoewignweogingewowepgmpwe");
 						}
 					}
@@ -213,10 +222,10 @@ public class Generator implements Runnable {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 				control = 0;
 			} else {
-				if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
-					maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
-					control=0;
-				} else
+//				if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
+//					maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
+//					control=0;
+//				} else
 					control++;
 			}
 
@@ -225,10 +234,10 @@ public class Generator implements Runnable {
 				control = 0;
 			}
 
-//			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
-//					+ " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
-//
-//			System.out.println();
+			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
+					+ " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
+
+			System.out.println();
 		}
 
 		for (Exam e : exams.values()) {
