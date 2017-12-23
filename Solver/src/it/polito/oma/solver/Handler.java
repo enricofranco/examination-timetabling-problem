@@ -155,7 +155,7 @@ public class Handler {
 			solution = generators[i].getSolution();
 			if(checkFeasibility()) {
 				buildDistancies();
-				System.out.println("Objective function value: " + objectiveFunction()+" tempo "
+				System.out.println("Objective function value: " + objectiveFunction() +" tempo "
 						+ ""+((float)System.nanoTime()-time)/1000000000);
 			} else {
 				System.out.println("Unfeasible solution " + totalConflicts(solution));
@@ -224,6 +224,15 @@ public class Handler {
 	 * the possibility of penalties due to the little distance.
 	 */
 	private void buildDistancies() {
+		/* 
+		 * Reset the conflict matrix.
+		 * Prevent the overlapping of conflicts during multiple threads execution
+		 */
+		for(int i = 0; i < E; ++i)
+			for(int j = 0; j < E; ++j)
+				for(int k = 0; k < PENALTIES; ++k)
+					conflict[i][j][k] = 0;
+
 		for(int i = 0; i < E; ++i) {
 			for(int j = 0; j < E; ++j) {
 				if(i < j) {	// Fill only the upper part of the matrix
