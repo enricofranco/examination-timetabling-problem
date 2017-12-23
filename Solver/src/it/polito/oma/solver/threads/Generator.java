@@ -117,6 +117,7 @@ public class Generator implements Runnable {
 			}
 		}
 
+		
 		/**
 		 * At the end of this loop, there could be not assigned exams, because of
 		 * conflicts. These exams are assigned to the slot with the smallest number of
@@ -124,9 +125,16 @@ public class Generator implements Runnable {
 		 * there are no exam to assign
 		 */
 
-		System.out.println(numberExamsWithoutTimeslot + " before");
+		LinkedHashMap<Integer,Exam> examsNotTaken = new LinkedHashMap<Integer,Exam>();
+		
+		for(Exam e:exams.values()) {
+			if(!e.getTake()) {
+				examsNotTaken.put(e.getId(), e);
+			}
+		}
+//		System.out.println(numberExamsWithoutTimeslot + " before");
 
-		while (numberExamsWithoutTimeslot > 0) {
+		while (!examsNotTaken.values().isEmpty()) {
 
 			if (control == 1000) {/* Mutation */
 				 control = 0;
@@ -174,9 +182,10 @@ public class Generator implements Runnable {
 			 * smallest number of conflicts, then remove all the other exam in conflict with
 			 * the added exam
 			 */
-			for (Exam exam : exams.values()) {
+			LinkedHashMap<Integer,Exam> examsToAdd=new LinkedHashMap<Integer,Exam>();
+			
+			for (Exam exam:examsNotTaken.values()) {
 				examId = exam.getId();
-				if (!exam.getTake()) {
 					for (int i = 0; i < T; i++) {/* Search a feasible timeslot */
 						conflicts = timeslotsArray[i].getNumberOfConflicts(examId);
 						if (conflicts <= minConflicts && !tabooList.checkTaboo(timeslotsArray[i],exam)) {
@@ -192,31 +201,34 @@ public class Generator implements Runnable {
 						}
 					}
 
-					ArrayList<Integer> listExamWithoutTimeslot = new ArrayList<>();
+					LinkedHashMap<Integer,Exam> listExamWithoutTimeslot = new LinkedHashMap<Integer,Exam>();
 					/**
 					 * Select all the exam in conflict
 					 */
 					for (Exam examInTimeslotChange : timeslotChange.getExams().values()) {
 						if (examInTimeslotChange.searchConflictWithExam(exam)) {
-							listExamWithoutTimeslot.add(examInTimeslotChange.getId());
+							listExamWithoutTimeslot.put(examInTimeslotChange.getId(),examInTimeslotChange);
 						}
 					}
 					/**
 					 * Remove the searched exams
 					 */
-					for (int i = 0; i < listExamWithoutTimeslot.size(); i++) {
-						int examIdWithoutTimeslot = listExamWithoutTimeslot.get(i);
+					for (Exam e:listExamWithoutTimeslot.values()) {
+						int examIdWithoutTimeslot = e.getId();
 						timeslotChange.subExams(exams.get(examIdWithoutTimeslot));
 						numberExamsWithoutTimeslot++;
 						tabooList.setTaboo(timeslotChange,exams.get(examIdWithoutTimeslot));
+						examsToAdd.put(examIdWithoutTimeslot,e);
 					}
 					timeslotChange.addExams(exam);
 					exam.setTimeSlot(timeslotChange);
 					numberExamsWithoutTimeslot--;
 					minConflicts = Integer.MAX_VALUE;
-				}
 			}
-
+			examsNotTaken.clear();
+			for(Exam e:examsToAdd.values()) {
+				examsNotTaken.put(e.getId(),e);
+			}
 			if (numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 				control = 0;

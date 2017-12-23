@@ -11,7 +11,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		long timeStart = System.nanoTime(); // Start timer
-		String instanceName = "instance02";
+		String instanceName = "instance06";
 		Handler h = new Handler();
 		
 		// Read files
