@@ -233,26 +233,26 @@ public class Generator implements Runnable {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 				control = 0;
 				if (minExamWithoutTimeslot < minGlobalConflicts+3) {
-					control=-2000;
+					control=-1000;
 				}
-				if (minExamWithoutTimeslot <= 3) {
+				if (minExamWithoutTimeslot <= 4) {
 					control=-10000;
 				}
 				if (minExamWithoutTimeslot <= 1) {
 					control=-20000;
 				}
-				
-			} else {
+		}
+//			else {
 //				if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
 //					maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
 //					control=0;
 //				} else
 					control++;
-			}
+//			}
 
 			if (minExamWithoutTimeslot < minGlobalConflicts) {
 				minGlobalConflicts = minExamWithoutTimeslot;
-				control = 0;
+//				control = 0;
 			}
 
 //			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
