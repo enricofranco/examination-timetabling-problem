@@ -138,6 +138,7 @@ public class Handler {
 		/*
 		 * Threads creation
 		 */
+		int[] threadTake=new int[THREADS_NUMBER];
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
 		long time=System.nanoTime();
@@ -145,17 +146,26 @@ public class Handler {
 			generators[i] = new Generator(T, exams, conflictWeight);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
+			threadTake[i]=0;
 		}
 
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			/*
 			 * For each thread, wait for a solution, then check feasibility
 			 */
-			while(t[i].getState() != Thread.State.TERMINATED);
-			solution = generators[i].getSolution();
+			int k=0;
+			do {
+				k++;
+				if(k>=THREADS_NUMBER) {
+					k=0;
+				}
+			}
+			while(t[k].getState() != Thread.State.TERMINATED || threadTake[k]==1);
+			threadTake[k]=1;
+			solution = generators[k].getSolution();
 			if(checkFeasibility()) {
 				buildDistancies();
-				System.out.println("Objective function value: " + objectiveFunction() +" tempo "
+				System.out.println("Thread "+k+" Objective function value: " + objectiveFunction() +" tempo "
 						+ ""+((float)System.nanoTime()-time)/1000000000);
 			} else {
 				System.out.println("Unfeasible solution " + totalConflicts(solution));

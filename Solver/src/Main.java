@@ -35,6 +35,6 @@ public class Main {
 			e.printStackTrace();
 		}
 		
-		System.out.println((System.nanoTime() - timeStart) / 1000000000.0);
+		System.out.println("Tempo Esecuzione " + (System.nanoTime() - timeStart) / 1000000000.0);
 	}
 }

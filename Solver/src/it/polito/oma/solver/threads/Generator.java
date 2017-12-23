@@ -150,12 +150,10 @@ public class Generator implements Runnable {
 						for (int i = 0; i < T; i++) {/* Search a free timeslot */
 							if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
 									&& !tabooList.checkTaboo(timeslotsArray[i],exam)) {
-								if (rand.nextInt(indexMutation) == 0) {
 									mutationFlag = true;
 //									timeslotChange = timeslotsArray[i];
 									timeslotAvaible[ti]=timeslotsArray[i];
 									ti++;
-								}
 							}
 						}
 						if (mutationFlag) {
@@ -192,12 +190,14 @@ public class Generator implements Runnable {
 							minConflicts = conflicts;
 							timeslotChange = timeslotsArray[i];
 						}
+						else {
 						int calcoloMinimo;
 						calcoloMinimo = numberExamsWithoutTimeslot + conflicts - 1;
 						if (calcoloMinimo < minGlobalConflicts) {
 							minConflicts = conflicts;
 							timeslotChange = timeslotsArray[i];
 //							System.out.println("oiwegnoewignweogingewowepgmpwe");
+						}
 						}
 					}
 
