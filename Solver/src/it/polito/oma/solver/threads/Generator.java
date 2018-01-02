@@ -164,7 +164,7 @@ public class Generator implements Runnable {
 								ti++;
 							}
 						}
-						if (mutationFlag && ti > 1) {
+						if (mutationFlag) {
 							mutationFlag = false;
 							timeslotChange = timeslotAvaible[rand.nextInt(ti)];
 							ti = 0;
@@ -301,10 +301,10 @@ public class Generator implements Runnable {
 		int count = 0;
 		int t1, t2;
 		TimeSlot temp;
-
+		System.out.println("optimization");
 		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
 			control++;
-			if (count > 5000) {
+			if (count > 50000000) {
 				count = 0;
 				tabooListOpt.cleanTabooList();
 				t1 = rand.nextInt(T);
@@ -342,20 +342,6 @@ public class Generator implements Runnable {
 				for (int i=0;i<E;i++) {
 					solution[i]=tmpSol[i];
 				}
-//				temp = new TimeSlot(t2, E);
-//				for (Exam e2 : timeslotsArray[t2].getExams().values()) {
-//					temp.addExams(e2);
-//				}
-//				timeslotsArray[t2].getExams().clear();
-//				for (Exam e1 : timeslotsArray[t1].getExams().values()) {
-//					e1.setTimeSlot(timeslotsArray[t2]);
-//					timeslotsArray[t2].addExams(e1);
-//				}
-//				timeslotsArray[t1].getExams().clear();
-//				for (Exam e2 : temp.getExams().values()) {
-//					e2.setTimeSlot(timeslotsArray[t1]);
-//					timeslotsArray[t1].addExams(e2);
-//				}
 			}
 			for (Exam exam : exams.values()) {
 				ti = 0;
@@ -453,8 +439,8 @@ public class Generator implements Runnable {
 					} else {
 						count++;
 					}
-					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
-							+ initOf + " control " + control + " count " + count);
+//					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
+//							+ initOf + " control " + control + " count " + count);
 					// buildDistancies();
 					// objectiveFunction = objectiveFunction();
 					tabooListOpt.setTaboo(null, null);
