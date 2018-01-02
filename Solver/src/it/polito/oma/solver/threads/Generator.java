@@ -304,43 +304,99 @@ public class Generator implements Runnable {
 		System.out.println("optimization");
 		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
 			control++;
-			if (count > 50000000) {
+			if (count > 500) {
+				control = 0;
 				count = 0;
-				tabooListOpt.cleanTabooList();
+				// tabooListOpt.cleanTabooList();
 				t1 = rand.nextInt(T);
 				do {
 					t2 = rand.nextInt(T);
 				} while (t2 == t1);
-
+				int timeSlotBest=t1;
+				double ofBest=Double.MAX_VALUE;
+				for (int j = 0; j < T; j++) {
+					if (t1 != j) {
+						Map<Integer, Exam> examsT1 = new HashMap<>();
+						Map<Integer, Exam> examsT2 = new HashMap<>();
+						examsT1.putAll(timeslotsArray[t1].getExams());
+						examsT2.putAll(timeslotsArray[j].getExams());
+						for (Exam e : examsT1.values()) {
+							timeslotsArray[t1].subExams(e);
+						}
+						for (Exam e : examsT2.values()) {
+							timeslotsArray[j].subExams(e);
+						}
+						for (Exam e : examsT2.values()) {
+							timeslotsArray[t1].addExams(e);
+							e.setTimeSlot(timeslotsArray[t1]);
+						}
+						for (Exam e : examsT1.values()) {
+							timeslotsArray[j].addExams(e);
+							e.setTimeSlot(timeslotsArray[j]);
+						}
+						int[] tmpSol = new int[E];
+						for (int i = 0; i < E; i++) {
+							tmpSol[i] = solution[i];
+						}
+						for (Exam e : exams.values()) {
+							solution[e.getId() - 1] = e.getTimeSlot().getId();
+						}
+						this.buildDistancies();
+						objectiveFunction = this.objectiveFunction();
+						for (int i = 0; i < E; i++) {
+							solution[i] = tmpSol[i];
+						}
+						if(objectiveFunction<ofBest) {
+							ofBest=objectiveFunction;
+							timeSlotBest=j;
+						}
+						for (Exam e : examsT1.values()) {
+							timeslotsArray[j].subExams(e);
+						}
+						for (Exam e : examsT2.values()) {
+							timeslotsArray[t1].subExams(e);
+						}
+						for (Exam e : examsT2.values()) {
+							timeslotsArray[j].addExams(e);
+							e.setTimeSlot(timeslotsArray[j]);
+						}
+						for (Exam e : examsT1.values()) {
+							timeslotsArray[t1].addExams(e);
+							e.setTimeSlot(timeslotsArray[t1]);
+						}
+					}
+				}
 				Map<Integer, Exam> examsT1 = new HashMap<>();
 				Map<Integer, Exam> examsT2 = new HashMap<>();
 				examsT1.putAll(timeslotsArray[t1].getExams());
-				examsT2.putAll(timeslotsArray[t2].getExams());
-				for(Exam e:examsT1.values()) {
+				examsT2.putAll(timeslotsArray[timeSlotBest].getExams());
+				for (Exam e : examsT1.values()) {
 					timeslotsArray[t1].subExams(e);
 				}
-				for(Exam e:examsT2.values()) {
-					timeslotsArray[t2].subExams(e);
+				for (Exam e : examsT2.values()) {
+					timeslotsArray[timeSlotBest].subExams(e);
 				}
-				for(Exam e:examsT2.values()) {
+				for (Exam e : examsT2.values()) {
 					timeslotsArray[t1].addExams(e);
+					tabooListOpt.setTaboo(e.getTimeSlot(), e);
 					e.setTimeSlot(timeslotsArray[t1]);
 				}
-				for(Exam e:examsT1.values()) {
-					timeslotsArray[t2].addExams(e);
-					e.setTimeSlot(timeslotsArray[t2]);
+				for (Exam e : examsT1.values()) {
+					timeslotsArray[timeSlotBest].addExams(e);
+					tabooListOpt.setTaboo(e.getTimeSlot(), e);
+					e.setTimeSlot(timeslotsArray[timeSlotBest]);
 				}
-				int[] tmpSol=new int[E];
-				for (int i=0;i<E;i++) {
-					tmpSol[i]=solution[i];
+				int[] tmpSol = new int[E];
+				for (int i = 0; i < E; i++) {
+					tmpSol[i] = solution[i];
 				}
 				for (Exam e : exams.values()) {
 					solution[e.getId() - 1] = e.getTimeSlot().getId();
 				}
 				this.buildDistancies();
 				objectiveFunction = this.objectiveFunction();
-				for (int i=0;i<E;i++) {
-					solution[i]=tmpSol[i];
+				for (int i = 0; i < E; i++) {
+					solution[i] = tmpSol[i];
 				}
 			}
 			for (Exam exam : exams.values()) {
@@ -439,8 +495,9 @@ public class Generator implements Runnable {
 					} else {
 						count++;
 					}
-//					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
-//							+ initOf + " control " + control + " count " + count);
+					// System.out.println(" of " + objectiveFunction + " bof" + " " +
+					// bestObjectiveFunction + " initSol "
+					// + initOf + " control " + control + " count " + count);
 					// buildDistancies();
 					// objectiveFunction = objectiveFunction();
 					tabooListOpt.setTaboo(null, null);
