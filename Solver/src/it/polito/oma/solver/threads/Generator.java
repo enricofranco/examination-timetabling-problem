@@ -283,7 +283,7 @@ public class Generator implements Runnable {
 		 * con=conflicts conflicts=conflictsWeight ho fatto questi cambi per mantenere
 		 * la coerenza con il codice precedente di questa classe
 		 */
-		TabooList tabooListOpt = new TabooList(100);
+		TabooList tabooListOpt = new TabooList(1000);
 		double objectiveFunction = this.objectiveFunction();
 		double bestObjectiveFunction = objectiveFunction;
 		initOf = objectiveFunction;
@@ -298,7 +298,7 @@ public class Generator implements Runnable {
 		boolean slotAvaible = false;
 		double bestConflict = Integer.MAX_VALUE;
 		int control = 0;
-		while (((float) System.nanoTime() - time) / 1000000000 < 0.05) {
+		while (((float) System.nanoTime() - time) / 1000000000 < 5) {
 			control++;
 			for (Exam exam : exams.values()) {
 				ti = 0;
@@ -397,6 +397,7 @@ public class Generator implements Runnable {
 							+ initOf + " control " + control);
 					// buildDistancies();
 					// objectiveFunction = objectiveFunction();
+					tabooListOpt.setTaboo(null, null);
 				}
 			}
 
