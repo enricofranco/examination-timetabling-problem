@@ -283,6 +283,7 @@ public class Generator implements Runnable {
 		 * con=conflicts conflicts=conflictsWeight ho fatto questi cambi per mantenere
 		 * la coerenza con il codice precedente di questa classe
 		 */
+		TabooList tabooListOpt = new TabooList(100);
 		double objectiveFunction = this.objectiveFunction();
 		double bestObjectiveFunction = objectiveFunction;
 		initOf = objectiveFunction;
@@ -297,12 +298,7 @@ public class Generator implements Runnable {
 		boolean slotAvaible = false;
 		double bestConflict = Integer.MAX_VALUE;
 		int control = 0;
-		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
-			if(control==5000) {
-				for(Exam e:exams.values()) {
-					e.cleanTabooList();
-				}
-			}
+		while (((float) System.nanoTime() - time) / 1000000000 < 0.05) {
 			control++;
 			for (Exam exam : exams.values()) {
 				ti = 0;
@@ -310,7 +306,7 @@ public class Generator implements Runnable {
 				examId = exam.getId();
 				for (int i = 0; i < T; i++) {/* Search a free timeslot */
 					if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
-							&& !exam.checkTaboo(timeslotsArray[i])) {
+							&& !tabooListOpt.checkTaboo(timeslotsArray[i], exam)) {
 						slotAvaible = true;
 						timeslotAvaible[ti] = timeslotsArray[i];
 						ti++;
@@ -323,73 +319,72 @@ public class Generator implements Runnable {
 						TimeSlot t = timeslotAvaible[j];
 						int timeSlotIdNext = t.getId();
 						double differenceOf = 0;
-							for (int i = 1; i <= 5; i++) {/*
-															 * calcolo di quanto cambierebbe Of scegliendo questo
-															 * timeSlot
-															 */
-								if (timeSlotIdNext - i - 1 >= 0) {
-									for (Exam e : timeslotsArray[timeSlotIdNext - i - 1].getExams().values()) {
-										if (e.searchConflictWithExam(exam)) {
-											if (e.getId() > exam.getId()) {
-												differenceOf = differenceOf
-														+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
-											} else {
-												differenceOf = differenceOf
-														+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
-											}
-										}
-									}
-								}
-								if (timeSlotIdNext + i - 1 < T) {
-									for (Exam e : timeslotsArray[timeSlotIdNext + i - 1].getExams().values()) {
-										if (e.searchConflictWithExam(exam)) {
-											if (e.getId() > exam.getId()) {
-												differenceOf = differenceOf
-														+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
-											} else {
-												differenceOf = differenceOf
-														+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
-											}
+						for (int i = 1; i <= 5; i++) {/*
+														 * calcolo di quanto cambierebbe Of scegliendo questo timeSlot
+														 */
+							if (timeSlotIdNext - i - 1 >= 0) {
+								for (Exam e : timeslotsArray[timeSlotIdNext - i - 1].getExams().values()) {
+									if (e.searchConflictWithExam(exam)) {
+										if (e.getId() > exam.getId()) {
+											differenceOf = differenceOf
+													+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+										} else {
+											differenceOf = differenceOf
+													+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
 										}
 									}
 								}
 							}
-							if (bestDifference >= differenceOf) {
-								timeslotChange = t;
-								bestDifference = differenceOf;
+							if (timeSlotIdNext + i - 1 < T) {
+								for (Exam e : timeslotsArray[timeSlotIdNext + i - 1].getExams().values()) {
+									if (e.searchConflictWithExam(exam)) {
+										if (e.getId() > exam.getId()) {
+											differenceOf = differenceOf
+													+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+										} else {
+											differenceOf = differenceOf
+													+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
+										}
+									}
+								}
 							}
-						
+						}
+						if (bestDifference >= differenceOf) {
+							timeslotChange = t;
+							bestDifference = differenceOf;
+						}
+
 					}
 					double preDifference = 0;
 					int timeSlotId = exam.getTimeSlot().getId();
-						for (int i = 1; i <= 5; i++) {/* calcolo di quanto dell'of dovuto al timeSlot precedente */
-							if (timeSlotId - i - 1 >= 0) {
-								for (Exam e : timeslotsArray[timeSlotId - i - 1].getExams().values()) {
-									if (e.searchConflictWithExam(exam)) {
-										if (e.getId() < exam.getId()) {
-											preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
-										} else {
-											preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
-										}
+					for (int i = 1; i <= 5; i++) {/* calcolo di quanto dell'of dovuto al timeSlot precedente */
+						if (timeSlotId - i - 1 >= 0) {
+							for (Exam e : timeslotsArray[timeSlotId - i - 1].getExams().values()) {
+								if (e.searchConflictWithExam(exam)) {
+									if (e.getId() < exam.getId()) {
+										preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+									} else {
+										preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
 									}
 								}
 							}
-							if (timeSlotId + i - 1 < T) {
-								for (Exam e : timeslotsArray[timeSlotId + i - 1].getExams().values()) {
-									if (e.searchConflictWithExam(exam)) {
-										if (e.getId() < exam.getId()) {
-											preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
-										} else {
-											preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
-										}
+						}
+						if (timeSlotId + i - 1 < T) {
+							for (Exam e : timeslotsArray[timeSlotId + i - 1].getExams().values()) {
+								if (e.searchConflictWithExam(exam)) {
+									if (e.getId() < exam.getId()) {
+										preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+									} else {
+										preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
 									}
 								}
-							
+							}
+
 						}
 					}
 					objectiveFunction = objectiveFunction + (-preDifference + bestDifference) / S;
 					exam.getTimeSlot().subExams(exam);
-					exam.setTaboo(exam.getTimeSlot());
+					tabooListOpt.setTaboo(exam.getTimeSlot(), exam);
 					exam.setTimeSlot(timeslotChange);
 					timeslotChange.addExams(exam);
 					if (objectiveFunction < bestObjectiveFunction) {
@@ -398,8 +393,8 @@ public class Generator implements Runnable {
 						}
 						bestObjectiveFunction = objectiveFunction;
 					}
-					 System.out.println(" of "+objectiveFunction+" bof"
-					 + " "+bestObjectiveFunction+" initSol "+initOf+" control "+control);
+					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
+							+ initOf + " control " + control);
 					// buildDistancies();
 					// objectiveFunction = objectiveFunction();
 				}
