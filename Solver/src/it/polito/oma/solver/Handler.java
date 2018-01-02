@@ -15,7 +15,7 @@ public class Handler {
 	private int PENALTIES = 5;
 	private int BASE_PENALTY = 2;
 	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 3;
+	private int THREADS_NUMBER = 1;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -143,7 +143,7 @@ public class Handler {
 		Thread t[] = new Thread[THREADS_NUMBER];
 		long time=System.nanoTime();
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, conflictWeight);
+			generators[i] = new Generator(T, exams, conflictWeight,time,S,p);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 			threadTake[i]=0;

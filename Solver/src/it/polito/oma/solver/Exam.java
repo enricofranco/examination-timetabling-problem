@@ -8,7 +8,7 @@ public class Exam {
 	private int id, i;
 	private int enrolledStudents;
 	private boolean taken;
-	private int tabooBuffer = 100;
+	private int tabooBuffer = 5;
 	private TimeSlot timeSlot;
 	private List<Exam> examsInConflict = new ArrayList<Exam>();
 	private TimeSlot[] tabooSlot = new TimeSlot[tabooBuffer];
@@ -98,5 +98,33 @@ public class Exam {
 	
 	public boolean getPresoPrec() {
 		return presoPrec;
+	}
+	public void setTaboo(TimeSlot ts) {
+		if(ts==null) {
+			tabooSlot[tabooPosition]=null;
+		}
+		else {
+			tabooSlot[tabooPosition]=ts;
+		}
+		tabooPosition++;
+		if(tabooPosition>=tabooBuffer) {
+			tabooPosition=0;
+		}
+	}
+	
+	public boolean checkTaboo(TimeSlot ts) {
+		for(int i=0; i<tabooBuffer; i++) {
+			if(tabooSlot[i]!=null) {
+				if(tabooSlot[i]==ts) {
+					return true;
+				}
+			}	
+		}
+		return false;
+	}
+	public void cleanTabooList() {
+		for(int i=0; i<tabooBuffer; i++) {
+			tabooSlot[i]=null;
+		}
 	}
 }

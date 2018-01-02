@@ -13,7 +13,8 @@ public class Generator implements Runnable {
 	private int T;
 	private TimeSlot[] timeslotsArray;
 	private TimeSlot timeslotChange;
-	private TimeSlot[]timeslotAvaible;
+	private TimeSlot[] timeslotAvaible;
+	private int PENALTIES = 5;
 
 	// Exams
 	private Map<Integer, Exam> examsInit;
@@ -28,17 +29,27 @@ public class Generator implements Runnable {
 	private int variabileDiTest = 0, j = 0;
 	// Solution vector
 	private int[] solution;
-	private int ti=0;
+	private int ti = 0;
 	private TabooList tabooList;
+	private long time;
+	private int S;
+	private int[][] conflicts;
+	private int[] p;
+	private int[][][] con;
 
 	/*
 	 * Set variables into the random generator
 	 */
-	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts) {
+	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts, long time, int S, int[] p) {
+		this.p = p;
+		this.S = S;
+		this.time = time;
 		this.T = T;
 		this.E = exams.size();
+		this.con = new int[E][E][PENALTIES];
 		this.examsInit = new TreeMap<Integer, Exam>();
-		this.timeslotAvaible=new TimeSlot[E];
+		this.timeslotAvaible = new TimeSlot[T];
+		this.conflicts = conflicts;
 		for (Integer i : exams.keySet()) {
 			Exam exam = exams.get(i);
 			Exam e = new Exam(i, exam.getEnrolledStudents());
@@ -61,10 +72,10 @@ public class Generator implements Runnable {
 			}
 		}
 		this.solution = new int[E];
-		this.exams=new LinkedHashMap<Integer,Exam>();
+		this.exams = new LinkedHashMap<Integer, Exam>();
 		numberExamsWithoutTimeslot = E;
 		minExamWithoutTimeslot = E;
-		tabooList=new TabooList(100);
+		tabooList = new TabooList(100);
 		setTimeSlot();
 	}
 
@@ -73,8 +84,7 @@ public class Generator implements Runnable {
 		/**
 		 * set random parameters
 		 */
-		
-		
+
 		int[] examRandom = new int[E];
 		Random rand = new Random();
 		int examId;
@@ -85,20 +95,20 @@ public class Generator implements Runnable {
 		int maxExamWithoutTimeslot = 0;
 		rand.setSeed(System.nanoTime());
 
-		for(int i = 0; i < E; ++i) {
-			examRandom[i] = i+1;
+		for (int i = 0; i < E; ++i) {
+			examRandom[i] = i + 1;
 		}
-		for(int i = 0; i < E; ++i) {
-			int r = rand.nextInt(E-i);
+		for (int i = 0; i < E; ++i) {
+			int r = rand.nextInt(E - i);
 			Exam e = examsInit.get(examRandom[r]);
 			exams.put(e.getId(), e);
-			examRandom[r] = examRandom[E-1-i];
+			examRandom[r] = examRandom[E - 1 - i];
 		}
-//		for(Exam e:exams.values()) {
-//			System.out.print(e.getId()+" ");
-//		}
-////		System.out.println("");
-//		System.out.println(numberExamsWithoutTimeslot + " first");
+		// for(Exam e:exams.values()) {
+		// System.out.print(e.getId()+" ");
+		// }
+		//// System.out.println("");
+		// System.out.println(numberExamsWithoutTimeslot + " first");
 
 		/**
 		 * This loop assigns an exam to the first free timeslot, paying attention to
@@ -117,7 +127,6 @@ public class Generator implements Runnable {
 			}
 		}
 
-		
 		/**
 		 * At the end of this loop, there could be not assigned exams, because of
 		 * conflicts. These exams are assigned to the slot with the smallest number of
@@ -125,54 +134,51 @@ public class Generator implements Runnable {
 		 * there are no exam to assign
 		 */
 
-		LinkedHashMap<Integer,Exam> examsNotTaken = new LinkedHashMap<Integer,Exam>();
-		
-		for(Exam e:exams.values()) {
-			if(!e.getTake()) {
+		LinkedHashMap<Integer, Exam> examsNotTaken = new LinkedHashMap<Integer, Exam>();
+
+		for (Exam e : exams.values()) {
+			if (!e.getTake()) {
 				examsNotTaken.put(e.getId(), e);
 			}
 		}
-//		System.out.println(numberExamsWithoutTimeslot + " before");
+		// System.out.println(numberExamsWithoutTimeslot + " before");
 
 		while (!examsNotTaken.values().isEmpty()) {
 
 			if (control == 1000) {/* Mutation */
-				 control = 0;
+				control = 0;
 
 				/**
 				 * For each exam, this loop probably (1/2) change the state of an exam, if the
 				 * exam is in a timeslot and there are no conflicts with other timeslots
 				 */
-				ti=0;
+				ti = 0;
 				for (Exam exam : exams.values()) {
 					examId = exam.getId();
 					if (exam.getTake()) {
 						for (int i = 0; i < T; i++) {/* Search a free timeslot */
 							if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
-									&& !tabooList.checkTaboo(timeslotsArray[i],exam)) {
-									mutationFlag = true;
-//									timeslotChange = timeslotsArray[i];
-									timeslotAvaible[ti]=timeslotsArray[i];
-									ti++;
+									&& !tabooList.checkTaboo(timeslotsArray[i], exam)) {
+								mutationFlag = true;
+								timeslotAvaible[ti] = timeslotsArray[i];
+								ti++;
 							}
 						}
-						if (mutationFlag) {
+						if (mutationFlag && ti > 1) {
 							mutationFlag = false;
-							timeslotChange=timeslotAvaible[rand.nextInt(ti)];
-							ti=0;
+							timeslotChange = timeslotAvaible[rand.nextInt(ti)];
+							ti = 0;
 							exam.getTimeSlot().subExams(exam);
-							tabooList.setTaboo(exam.getTimeSlot(),exam);
+							tabooList.setTaboo(exam.getTimeSlot(), exam);
 							exam.setTimeSlot(timeslotChange);
 							timeslotChange.addExams(exam);
 						}
-						
+
 					}
 				}
 				maxExamWithoutTimeslot = 0;
 				minExamWithoutTimeslot = Integer.MAX_VALUE;
-				 
-				 
-				 
+
 			}
 
 			/**
@@ -180,90 +186,264 @@ public class Generator implements Runnable {
 			 * smallest number of conflicts, then remove all the other exam in conflict with
 			 * the added exam
 			 */
-			LinkedHashMap<Integer,Exam> examsToAdd=new LinkedHashMap<Integer,Exam>();
-			
-			for (Exam exam:examsNotTaken.values()) {
+			LinkedHashMap<Integer, Exam> examsToAdd = new LinkedHashMap<Integer, Exam>();
+
+			for (Exam exam : examsNotTaken.values()) {
 				examId = exam.getId();
-					for (int i = 0; i < T; i++) {/* Search a feasible timeslot */
-						conflicts = timeslotsArray[i].getNumberOfConflicts(examId);
-						if (conflicts <= minConflicts && !tabooList.checkTaboo(timeslotsArray[i],exam)) {
-							minConflicts = conflicts;
-							timeslotChange = timeslotsArray[i];
-						}
-						else {
+				for (int i = 0; i < T; i++) {/* Search a feasible timeslot */
+					conflicts = timeslotsArray[i].getNumberOfConflicts(examId);
+					if (conflicts <= minConflicts && !tabooList.checkTaboo(timeslotsArray[i], exam)) {
+						minConflicts = conflicts;
+						timeslotChange = timeslotsArray[i];
+					} else {
 						int calcoloMinimo;
 						calcoloMinimo = numberExamsWithoutTimeslot + conflicts - 1;
 						if (calcoloMinimo < minGlobalConflicts) {
 							minConflicts = conflicts;
 							timeslotChange = timeslotsArray[i];
-//							System.out.println("oiwegnoewignweogingewowepgmpwe");
-						}
+							// System.out.println("oiwegnoewignweogingewowepgmpwe");
 						}
 					}
+				}
 
-					LinkedHashMap<Integer,Exam> listExamWithoutTimeslot = new LinkedHashMap<Integer,Exam>();
-					/**
-					 * Select all the exam in conflict
-					 */
-					for (Exam examInTimeslotChange : timeslotChange.getExams().values()) {
-						if (examInTimeslotChange.searchConflictWithExam(exam)) {
-							listExamWithoutTimeslot.put(examInTimeslotChange.getId(),examInTimeslotChange);
-						}
+				LinkedHashMap<Integer, Exam> listExamWithoutTimeslot = new LinkedHashMap<Integer, Exam>();
+				/**
+				 * Select all the exam in conflict
+				 */
+				for (Exam examInTimeslotChange : timeslotChange.getExams().values()) {
+					if (examInTimeslotChange.searchConflictWithExam(exam)) {
+						listExamWithoutTimeslot.put(examInTimeslotChange.getId(), examInTimeslotChange);
 					}
-					/**
-					 * Remove the searched exams
-					 */
-					for (Exam e:listExamWithoutTimeslot.values()) {
-						int examIdWithoutTimeslot = e.getId();
-						timeslotChange.subExams(exams.get(examIdWithoutTimeslot));
-						numberExamsWithoutTimeslot++;
-						tabooList.setTaboo(timeslotChange,exams.get(examIdWithoutTimeslot));
-						examsToAdd.put(examIdWithoutTimeslot,e);
-					}
-					timeslotChange.addExams(exam);
-					exam.setTimeSlot(timeslotChange);
-					numberExamsWithoutTimeslot--;
-					minConflicts = Integer.MAX_VALUE;
+				}
+				/**
+				 * Remove the searched exams
+				 */
+				for (Exam e : listExamWithoutTimeslot.values()) {
+					int examIdWithoutTimeslot = e.getId();
+					timeslotChange.subExams(exams.get(examIdWithoutTimeslot));
+					numberExamsWithoutTimeslot++;
+					tabooList.setTaboo(timeslotChange, exams.get(examIdWithoutTimeslot));
+					examsToAdd.put(examIdWithoutTimeslot, e);
+				}
+				timeslotChange.addExams(exam);
+				exam.setTimeSlot(timeslotChange);
+				numberExamsWithoutTimeslot--;
+				minConflicts = Integer.MAX_VALUE;
 			}
 			examsNotTaken.clear();
-			for(Exam e:examsToAdd.values()) {
-				examsNotTaken.put(e.getId(),e);
+			for (Exam e : examsToAdd.values()) {
+				examsNotTaken.put(e.getId(), e);
 			}
 			if (numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
 				minExamWithoutTimeslot = numberExamsWithoutTimeslot;
 				control = 0;
-				if (minExamWithoutTimeslot < minGlobalConflicts+3) {
-					control=-1000;
+				if (minExamWithoutTimeslot < minGlobalConflicts + 3) {
+					control = -1000;
 				}
-				if (minExamWithoutTimeslot <= 4) {
-					control=-10000;
+				if (minExamWithoutTimeslot <= 3) {
+					control = -10000;
 				}
 				if (minExamWithoutTimeslot <= 1) {
-					control=-20000;
+					control = -20000;
 				}
-		}
-//			else {
-//				if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
-//					maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
-//					control=0;
-//				} else
-					control++;
-//			}
+			}
+			// else {
+			// if (numberExamsWithoutTimeslot > maxExamWithoutTimeslot) {
+			// maxExamWithoutTimeslot = numberExamsWithoutTimeslot;
+			// control=0;
+			// } else
+			control++;
+			// }
 
 			if (minExamWithoutTimeslot < minGlobalConflicts) {
 				minGlobalConflicts = minExamWithoutTimeslot;
-//				control = 0;
+				// control = 0;
 			}
 
-//			System.out.println(numberExamsWithoutTimeslot + " control " + control + " min " + minExamWithoutTimeslot
-//					+ " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
-//
-//			System.out.println();
+			// System.out.println(numberExamsWithoutTimeslot + " control " + control + " min
+			// " + minExamWithoutTimeslot
+			// + " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
+			//
+			// System.out.println();
 		}
-
 		for (Exam e : exams.values()) {
 			solution[e.getId() - 1] = e.getTimeSlot().getId();
 		}
+
+		this.optimization();
+	}
+
+	public void optimization() {
+
+		this.buildDistancies();
+		int[] initSol = new int[E];
+		double initOf;
+		/**
+		 * ho utilizzato il codice precedente per avere una OF di partenza,
+		 * con=conflicts conflicts=conflictsWeight ho fatto questi cambi per mantenere
+		 * la coerenza con il codice precedente di questa classe
+		 */
+		double objectiveFunction = this.objectiveFunction();
+		double bestObjectiveFunction = objectiveFunction;
+		initOf = objectiveFunction;
+		/**
+		 * soluzione locale confrontata con la migliore (possibile non utilizzata)
+		 */
+		int[] localSolution = new int[E];
+		/**
+		 * itera fino a quando hai tempo (50 sec)
+		 */
+		int examId;
+		boolean slotAvaible = false;
+		double bestConflict = Integer.MAX_VALUE;
+		int control = 0;
+		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
+			if(control==5000) {
+				for(Exam e:exams.values()) {
+					e.cleanTabooList();
+				}
+			}
+			control++;
+			for (Exam exam : exams.values()) {
+				ti = 0;
+				bestConflict = Integer.MAX_VALUE;
+				examId = exam.getId();
+				for (int i = 0; i < T; i++) {/* Search a free timeslot */
+					if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
+							&& !exam.checkTaboo(timeslotsArray[i])) {
+						slotAvaible = true;
+						timeslotAvaible[ti] = timeslotsArray[i];
+						ti++;
+					}
+				}
+				if (slotAvaible) {/* decido dove spostare in base all'abbassarsi dell'Of */
+					slotAvaible = false;
+					double bestDifference = Integer.MAX_VALUE;
+					for (int j = 0; j < ti; j++) {
+						TimeSlot t = timeslotAvaible[j];
+						int timeSlotIdNext = t.getId();
+						double differenceOf = 0;
+							for (int i = 1; i <= 5; i++) {/*
+															 * calcolo di quanto cambierebbe Of scegliendo questo
+															 * timeSlot
+															 */
+								if (timeSlotIdNext - i - 1 >= 0) {
+									for (Exam e : timeslotsArray[timeSlotIdNext - i - 1].getExams().values()) {
+										if (e.searchConflictWithExam(exam)) {
+											if (e.getId() > exam.getId()) {
+												differenceOf = differenceOf
+														+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+											} else {
+												differenceOf = differenceOf
+														+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
+											}
+										}
+									}
+								}
+								if (timeSlotIdNext + i - 1 < T) {
+									for (Exam e : timeslotsArray[timeSlotIdNext + i - 1].getExams().values()) {
+										if (e.searchConflictWithExam(exam)) {
+											if (e.getId() > exam.getId()) {
+												differenceOf = differenceOf
+														+ conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+											} else {
+												differenceOf = differenceOf
+														+ conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
+											}
+										}
+									}
+								}
+							}
+							if (bestDifference >= differenceOf) {
+								timeslotChange = t;
+								bestDifference = differenceOf;
+							}
+						
+					}
+					double preDifference = 0;
+					int timeSlotId = exam.getTimeSlot().getId();
+						for (int i = 1; i <= 5; i++) {/* calcolo di quanto dell'of dovuto al timeSlot precedente */
+							if (timeSlotId - i - 1 >= 0) {
+								for (Exam e : timeslotsArray[timeSlotId - i - 1].getExams().values()) {
+									if (e.searchConflictWithExam(exam)) {
+										if (e.getId() < exam.getId()) {
+											preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+										} else {
+											preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
+										}
+									}
+								}
+							}
+							if (timeSlotId + i - 1 < T) {
+								for (Exam e : timeslotsArray[timeSlotId + i - 1].getExams().values()) {
+									if (e.searchConflictWithExam(exam)) {
+										if (e.getId() < exam.getId()) {
+											preDifference += conflicts[e.getId() - 1][exam.getId() - 1] * p[i - 1];
+										} else {
+											preDifference += conflicts[exam.getId() - 1][e.getId() - 1] * p[i - 1];
+										}
+									}
+								}
+							
+						}
+					}
+					objectiveFunction = objectiveFunction + (-preDifference + bestDifference) / S;
+					exam.getTimeSlot().subExams(exam);
+					exam.setTaboo(exam.getTimeSlot());
+					exam.setTimeSlot(timeslotChange);
+					timeslotChange.addExams(exam);
+					if (objectiveFunction < bestObjectiveFunction) {
+						for (Exam e : exams.values()) {
+							solution[e.getId() - 1] = e.getTimeSlot().getId();
+						}
+						bestObjectiveFunction = objectiveFunction;
+					}
+					 System.out.println(" of "+objectiveFunction+" bof"
+					 + " "+bestObjectiveFunction+" initSol "+initOf+" control "+control);
+					// buildDistancies();
+					// objectiveFunction = objectiveFunction();
+				}
+			}
+
+		}
+
+	}
+
+	private void buildDistancies() {
+		/*
+		 * Reset the conflict matrix. Prevent the overlapping of conflicts during
+		 * multiple threads execution
+		 */
+		for (int i = 0; i < E; i++)
+			for (int j = 0; j < E; j++)
+				for (int k = 0; k < PENALTIES; k++) {
+					// System.out.println("i "+i+" j "+j+" k "+k);
+					con[i][j][k] = 0;
+				}
+
+		for (int i = 0; i < E; ++i) {
+			for (int j = 0; j < E; ++j) {
+				if (i < j) { // Fill only the upper part of the matrix
+					int k = Math.abs(solution[i] - solution[j]); // Distance
+					if (k <= PENALTIES && k != 0) // Overlapping exams already checked
+						con[i][j][k - 1] = 1;
+				}
+			}
+		}
+	}
+
+	public double objectiveFunction() {
+		double obj = 0.0;
+		for (int i = 0; i < E; ++i) {
+			for (int j = 0; j < E; ++j) {
+				double partialSum = 0.0;
+				for (int k = 0; k < PENALTIES; ++k) {
+					partialSum += p[k] * con[i][j][k];
+				}
+				obj += conflicts[i][j] * partialSum;
+			}
+		}
+		return obj / S;
 	}
 
 	public int[] getSolution() {
