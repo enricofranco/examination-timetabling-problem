@@ -25,8 +25,8 @@ public class TabooList {
 			tabooList[tabooPosition][1]=-1;
 		}
 		else {
-		tabooList[tabooPosition][0]=ts.getId();
-		tabooList[tabooPosition][1]=e.getId();
+			tabooList[tabooPosition][0]=ts.getId();
+			tabooList[tabooPosition][1]=e.getId();
 		}
 		tabooPosition++;
 		if(tabooPosition>=tabooNumber) {

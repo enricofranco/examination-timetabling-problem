@@ -27,6 +27,7 @@ public class Generator implements Runnable {
 	private int minExamWithoutTimeslot = 0, minConflicts = Integer.MAX_VALUE, minGlobalConflicts = Integer.MAX_VALUE;
 	private long control = 0, controlMut = 0;
 	private int variabileDiTest = 0, j = 0;
+	
 	// Solution vector
 	private int[] solution;
 	private int ti = 0;
@@ -36,6 +37,9 @@ public class Generator implements Runnable {
 	private int[][] conflicts;
 	private int[] p;
 	private int[][][] con;
+	
+	//Other
+	Random rand = new Random();
 
 	/*
 	 * Set variables into the random generator
@@ -86,7 +90,6 @@ public class Generator implements Runnable {
 		 */
 
 		int[] examRandom = new int[E];
-		Random rand = new Random();
 		int examId;
 		int conflicts;
 		int indexMutation = 2;
@@ -298,8 +301,35 @@ public class Generator implements Runnable {
 		boolean slotAvaible = false;
 		double bestConflict = Integer.MAX_VALUE;
 		int control = 0;
-		while (((float) System.nanoTime() - time) / 1000000000 < 5) {
+		int count = 0;
+		int t1, t2;
+		TimeSlot temp;
+		
+		while (((float) System.nanoTime() - time) / 1000000000 < 50) {
 			control++;
+			if(count > 20000) {
+				count = 0;
+				tabooListOpt.cleanTabooList();
+				t1 = rand.nextInt(T);
+				do {
+					t2 = rand.nextInt(T);
+				}while(t2 == t1);
+			
+				temp = new TimeSlot(t2, E);
+				for(Exam e2:timeslotsArray[t2].getExams().values()) {
+					temp.addExams(e2);
+				}
+				timeslotsArray[t2].getExams().clear();
+				for(Exam e1:timeslotsArray[t1].getExams().values()) {
+					e1.setTimeSlot(timeslotsArray[t2]);
+					timeslotsArray[t2].addExams(e1);
+				}
+				timeslotsArray[t1].getExams().clear();
+				for(Exam e2:temp.getExams().values()) {
+					e2.setTimeSlot(timeslotsArray[t1]);
+					timeslotsArray[t1].addExams(e2);
+				}
+			}
 			for (Exam exam : exams.values()) {
 				ti = 0;
 				bestConflict = Integer.MAX_VALUE;
@@ -388,13 +418,17 @@ public class Generator implements Runnable {
 					exam.setTimeSlot(timeslotChange);
 					timeslotChange.addExams(exam);
 					if (objectiveFunction < bestObjectiveFunction) {
+						count = 0;
 						for (Exam e : exams.values()) {
 							solution[e.getId() - 1] = e.getTimeSlot().getId();
 						}
 						bestObjectiveFunction = objectiveFunction;
 					}
+					else {
+						count++;
+					}
 					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
-							+ initOf + " control " + control);
+							+ initOf + " control " + control + " count " + count);
 					// buildDistancies();
 					// objectiveFunction = objectiveFunction();
 					tabooListOpt.setTaboo(null, null);

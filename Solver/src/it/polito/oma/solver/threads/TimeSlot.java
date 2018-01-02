@@ -14,6 +14,7 @@ public class TimeSlot {
 		this.id = id;
 		numberOfConflicts = new int[nExams];
 	}
+	
 	public void addConflict(int position) {
 		numberOfConflicts[position-1]++;
 	}
