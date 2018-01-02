@@ -1,9 +1,6 @@
 package it.polito.oma.solver.threads;
 
-import java.util.ArrayList;
 import java.util.*;
-
-import java.util.Random;
 
 import it.polito.oma.solver.*;
 
@@ -27,7 +24,7 @@ public class Generator implements Runnable {
 	private int minExamWithoutTimeslot = 0, minConflicts = Integer.MAX_VALUE, minGlobalConflicts = Integer.MAX_VALUE;
 	private long control = 0, controlMut = 0;
 	private int variabileDiTest = 0, j = 0;
-	
+
 	// Solution vector
 	private int[] solution;
 	private int ti = 0;
@@ -37,8 +34,8 @@ public class Generator implements Runnable {
 	private int[][] conflicts;
 	private int[] p;
 	private int[][][] con;
-	
-	//Other
+
+	// Other
 	Random rand = new Random();
 
 	/*
@@ -286,7 +283,7 @@ public class Generator implements Runnable {
 		 * con=conflicts conflicts=conflictsWeight ho fatto questi cambi per mantenere
 		 * la coerenza con il codice precedente di questa classe
 		 */
-		TabooList tabooListOpt = new TabooList(1000);
+		TabooList tabooListOpt = new TabooList(100);
 		double objectiveFunction = this.objectiveFunction();
 		double bestObjectiveFunction = objectiveFunction;
 		initOf = objectiveFunction;
@@ -304,31 +301,61 @@ public class Generator implements Runnable {
 		int count = 0;
 		int t1, t2;
 		TimeSlot temp;
-		
-		while (((float) System.nanoTime() - time) / 1000000000 < 50) {
+
+		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
 			control++;
-			if(count > 20000) {
+			if (count > 5000) {
 				count = 0;
 				tabooListOpt.cleanTabooList();
 				t1 = rand.nextInt(T);
 				do {
 					t2 = rand.nextInt(T);
-				}while(t2 == t1);
-			
-				temp = new TimeSlot(t2, E);
-				for(Exam e2:timeslotsArray[t2].getExams().values()) {
-					temp.addExams(e2);
+				} while (t2 == t1);
+
+				Map<Integer, Exam> examsT1 = new HashMap<>();
+				Map<Integer, Exam> examsT2 = new HashMap<>();
+				examsT1.putAll(timeslotsArray[t1].getExams());
+				examsT2.putAll(timeslotsArray[t2].getExams());
+				for(Exam e:examsT1.values()) {
+					timeslotsArray[t1].subExams(e);
 				}
-				timeslotsArray[t2].getExams().clear();
-				for(Exam e1:timeslotsArray[t1].getExams().values()) {
-					e1.setTimeSlot(timeslotsArray[t2]);
-					timeslotsArray[t2].addExams(e1);
+				for(Exam e:examsT2.values()) {
+					timeslotsArray[t2].subExams(e);
 				}
-				timeslotsArray[t1].getExams().clear();
-				for(Exam e2:temp.getExams().values()) {
-					e2.setTimeSlot(timeslotsArray[t1]);
-					timeslotsArray[t1].addExams(e2);
+				for(Exam e:examsT2.values()) {
+					timeslotsArray[t1].addExams(e);
+					e.setTimeSlot(timeslotsArray[t1]);
 				}
+				for(Exam e:examsT1.values()) {
+					timeslotsArray[t2].addExams(e);
+					e.setTimeSlot(timeslotsArray[t2]);
+				}
+				int[] tmpSol=new int[E];
+				for (int i=0;i<E;i++) {
+					tmpSol[i]=solution[i];
+				}
+				for (Exam e : exams.values()) {
+					solution[e.getId() - 1] = e.getTimeSlot().getId();
+				}
+				this.buildDistancies();
+				objectiveFunction = this.objectiveFunction();
+				for (int i=0;i<E;i++) {
+					solution[i]=tmpSol[i];
+				}
+//				temp = new TimeSlot(t2, E);
+//				for (Exam e2 : timeslotsArray[t2].getExams().values()) {
+//					temp.addExams(e2);
+//				}
+//				timeslotsArray[t2].getExams().clear();
+//				for (Exam e1 : timeslotsArray[t1].getExams().values()) {
+//					e1.setTimeSlot(timeslotsArray[t2]);
+//					timeslotsArray[t2].addExams(e1);
+//				}
+//				timeslotsArray[t1].getExams().clear();
+//				for (Exam e2 : temp.getExams().values()) {
+//					e2.setTimeSlot(timeslotsArray[t1]);
+//					timeslotsArray[t1].addExams(e2);
+//				}
 			}
 			for (Exam exam : exams.values()) {
 				ti = 0;
@@ -423,8 +450,7 @@ public class Generator implements Runnable {
 							solution[e.getId() - 1] = e.getTimeSlot().getId();
 						}
 						bestObjectiveFunction = objectiveFunction;
-					}
-					else {
+					} else {
 						count++;
 					}
 					System.out.println(" of " + objectiveFunction + " bof" + " " + bestObjectiveFunction + " initSol "
