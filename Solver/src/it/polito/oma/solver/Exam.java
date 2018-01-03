@@ -1,27 +1,22 @@
 package it.polito.oma.solver;
 
 import java.util.*;
-
 import it.polito.oma.solver.threads.TimeSlot;
 
 public class Exam {
-	private int id, i;
+	//Parameters
+	private int id;
 	private int enrolledStudents;
+	
 	private boolean taken;
-	private int tabooBuffer = 5;
 	private TimeSlot timeSlot;
 	private List<Exam> examsInConflict = new ArrayList<Exam>();
-	private TimeSlot[] tabooSlot = new TimeSlot[tabooBuffer];
-	private int tabooPosition = 0;
 	private boolean flagIsChanged = false;
-	private TimeSlot tsPrec;
-	private boolean presoPrec=false;
 	
 	
 	public Exam(int id, int enrolledStudents) {
 		this.id = id;
 		this.enrolledStudents = enrolledStudents;
-		tabooPosition=0;
 		taken = false;
 	}
 
@@ -64,14 +59,6 @@ public class Exam {
 		this.timeSlot=ts;
 	}
 	
-	public void setTimeSlotPrec(TimeSlot ts) {
-		this.tsPrec=ts;
-	}
-	
-	public TimeSlot getTimeSlotPrec() {
-		return tsPrec;
-	}
-	
 	public TimeSlot getTimeSlot() {
 		return timeSlot;
 	}
@@ -86,45 +73,5 @@ public class Exam {
 	
 	public boolean getChange() {
 		return flagIsChanged;
-	}
-	
-	public void setPresoPrec() {
-		presoPrec=true;
-	}
-	
-	public void setNoPresoPrec() {
-		presoPrec=false;
-	}
-	
-	public boolean getPresoPrec() {
-		return presoPrec;
-	}
-	public void setTaboo(TimeSlot ts) {
-		if(ts==null) {
-			tabooSlot[tabooPosition]=null;
-		}
-		else {
-			tabooSlot[tabooPosition]=ts;
-		}
-		tabooPosition++;
-		if(tabooPosition>=tabooBuffer) {
-			tabooPosition=0;
-		}
-	}
-	
-	public boolean checkTaboo(TimeSlot ts) {
-		for(int i=0; i<tabooBuffer; i++) {
-			if(tabooSlot[i]!=null) {
-				if(tabooSlot[i]==ts) {
-					return true;
-				}
-			}	
-		}
-		return false;
-	}
-	public void cleanTabooList() {
-		for(int i=0; i<tabooBuffer; i++) {
-			tabooSlot[i]=null;
-		}
 	}
 }
