@@ -314,6 +314,10 @@ public class Generator implements Runnable {
 				} while (t2 == t1);
 				int timeSlotBest=t1;
 				double ofBest=Double.MAX_VALUE;
+				int[] tmpSol = new int[E];
+				for (int i = 0; i < E; i++) {
+					tmpSol[i] = solution[i];
+				}
 				for (int j = 0; j < T; j++) {
 					if (t1 != j) {
 						Map<Integer, Exam> examsT1 = new HashMap<>();
@@ -334,18 +338,11 @@ public class Generator implements Runnable {
 							timeslotsArray[j].addExams(e);
 							e.setTimeSlot(timeslotsArray[j]);
 						}
-						int[] tmpSol = new int[E];
-						for (int i = 0; i < E; i++) {
-							tmpSol[i] = solution[i];
-						}
 						for (Exam e : exams.values()) {
 							solution[e.getId() - 1] = e.getTimeSlot().getId();
 						}
 						this.buildDistancies();
 						objectiveFunction = this.objectiveFunction();
-						for (int i = 0; i < E; i++) {
-							solution[i] = tmpSol[i];
-						}
 						if(objectiveFunction<ofBest) {
 							ofBest=objectiveFunction;
 							timeSlotBest=j;
@@ -386,31 +383,21 @@ public class Generator implements Runnable {
 					tabooListOpt.setTaboo(e.getTimeSlot(), e);
 					e.setTimeSlot(timeslotsArray[timeSlotBest]);
 				}
-				int[] tmpSol = new int[E];
-				for (int i = 0; i < E; i++) {
-					tmpSol[i] = solution[i];
-				}
 				for (Exam e : exams.values()) {
 					solution[e.getId() - 1] = e.getTimeSlot().getId();
 				}
 				
-//				Exam e1 = exams.get(rand.nextInt(E) + 1);
-//				ArrayList<Exam> list = new ArrayList<>();
-//				t1 = e1.getTimeSlot().getId() - 1;
-//				
-//				do {
-//					t2 = rand.nextInt(T);
-//				} while (t2 == t1);
-//				
-//				timeslotsArray[t1].subExams(e1);
-//				list.add(e1);
-//				
 //				exchangeExams(timeslotsArray[t1].getExams(), timeslotsArray[t2].getExams(), list, timeslotsArray[t1], timeslotsArray[t2]);
 				
 				this.buildDistancies();
 				objectiveFunction = this.objectiveFunction();
+				if(bestObjectiveFunction<objectiveFunction) {
 				for (int i = 0; i < E; i++) {
 					solution[i] = tmpSol[i];
+				}
+				}
+				else {
+					bestObjectiveFunction=objectiveFunction;
 				}
 			}
 			for (Exam exam : exams.values()) {
@@ -506,7 +493,7 @@ public class Generator implements Runnable {
 							solution[e.getId() - 1] = e.getTimeSlot().getId();
 						}
 						bestObjectiveFunction = objectiveFunction;
-						System.out.println(" bof" + " " + bestObjectiveFunction + " initSol " + initOf);
+//						System.out.println(" bof" + " " + bestObjectiveFunction + " initSol " + initOf);
 					} else {
 						count++;
 					}
