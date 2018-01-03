@@ -4,6 +4,10 @@ import java.util.*;
 
 import it.polito.oma.solver.*;
 
+/**
+ * @author enrico
+ *
+ */
 public class Generator implements Runnable {
 
 	// Timeslots
@@ -33,30 +37,38 @@ public class Generator implements Runnable {
 	private int S;
 	private int[][] conflicts;
 	private int[] p;
-	private int[][][] con;
+	private int[][][] conflict;
 
 	// Other
-	Random rand = new Random();
+	Random rand = new Random(System.nanoTime());
+	private long timeout;
 
 	/*
 	 * Set variables into the random generator
+	 * @param T - number of timeslots available
+	 * @param exams - map containing all exams to assign
+	 * @param conflicts - matrix containing the conflicts among each pair of exams
+	 * @param timeStart - instant when the program started, expressed in nanosecond
+	 * @param S - number of students
+	 * @param p - array of penalties
+	 * @param timeout - max time to execute the program, expressed in second
 	 */
-	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts, long time, int S, int[] p) {
+	public Generator(int T, Map<Integer, Exam> exams, int[][] conflicts, long timeStart, int S, int[] p, long timeout) {
 		this.p = p;
 		this.S = S;
-		this.time = time;
+		this.time = timeStart;
 		this.T = T;
 		this.E = exams.size();
-		this.con = new int[E][E][PENALTIES];
+		this.conflict = new int[E][E][PENALTIES];
 		this.examsInit = new TreeMap<Integer, Exam>();
 		this.timeslotAvaible = new TimeSlot[T];
 		this.conflicts = conflicts;
+		this.timeout = timeout * 1000000000; // Conversion in nanosecond to avoid calculus in the optimization loop
+		
 		for (Integer i : exams.keySet()) {
 			Exam exam = exams.get(i);
 			Exam e = new Exam(i, exam.getEnrolledStudents());
 			this.examsInit.put(i, e);
-			// System.out.println(this.exams.get(i).getId() + " " +
-			// this.exams.get(i).getEnrolledStudents());
 		}
 		for (Exam e1 : this.examsInit.values()) {
 			int id1 = e1.getId() - 1;
@@ -93,7 +105,6 @@ public class Generator implements Runnable {
 		int min;
 		int max;
 		int maxExamWithoutTimeslot = 0;
-		rand.setSeed(System.nanoTime());
 
 		for (int i = 0; i < E; ++i) {
 			examRandom[i] = i + 1;
@@ -133,7 +144,6 @@ public class Generator implements Runnable {
 		 * conflicts, then the other exams in conflicts, are removed. The loop ends when
 		 * there are no exam to assign
 		 */
-
 		LinkedHashMap<Integer, Exam> examsNotTaken = new LinkedHashMap<Integer, Exam>();
 
 		for (Exam e : exams.values()) {
@@ -302,7 +312,7 @@ public class Generator implements Runnable {
 		int t1, t2;
 		TimeSlot temp;
 		System.out.println("optimization");
-		while (((float) System.nanoTime() - time) / 1000000000 < 55) {
+		while (((float) System.nanoTime() - time) < timeout) {
 			control++;
 			if (count > 500) {
 				control = 0;
@@ -540,36 +550,42 @@ public class Generator implements Runnable {
 		exchangeExams(t2, t1, e2, tpos2, tpos1);
 	}
 
+	/**
+	 * This method builds the mutual distances between two exams and check
+	 * the possibility of penalties due to the little distance.
+	 */
 	private void buildDistancies() {
-		/*
-		 * Reset the conflict matrix. Prevent the overlapping of conflicts during
-		 * multiple threads execution
+		/* 
+		 * Reset the conflict matrix.
+		 * Prevent the overlapping of conflicts during multiple threads execution
 		 */
-		for (int i = 0; i < E; i++)
-			for (int j = 0; j < E; j++)
-				for (int k = 0; k < PENALTIES; k++) {
-					// System.out.println("i "+i+" j "+j+" k "+k);
-					con[i][j][k] = 0;
-				}
+		for(int i = 0; i < E; ++i)
+			for(int j = 0; j < E; ++j)
+				for(int k = 0; k < PENALTIES; ++k)
+					conflict[i][j][k] = 0;
 
-		for (int i = 0; i < E; ++i) {
-			for (int j = 0; j < E; ++j) {
-				if (i < j) { // Fill only the upper part of the matrix
+		for(int i = 0; i < E; ++i) {
+			for(int j = 0; j < E; ++j) {
+				if(i < j) {	// Fill only the upper part of the matrix
 					int k = Math.abs(solution[i] - solution[j]); // Distance
-					if (k <= PENALTIES && k != 0) // Overlapping exams already checked
-						con[i][j][k - 1] = 1;
+					if(k <= PENALTIES && k != 0) // Overlapping exams already checked
+						conflict[i][j][k-1] = 1;
 				}
 			}
-		}
+		}		
 	}
-
+	
+	/**
+	 * This method describes the objective function and resolve it, for the current solution
+	 * @return result of the objective function.
+	 */
 	public double objectiveFunction() {
 		double obj = 0.0;
 		for (int i = 0; i < E; ++i) {
 			for (int j = 0; j < E; ++j) {
 				double partialSum = 0.0;
 				for (int k = 0; k < PENALTIES; ++k) {
-					partialSum += p[k] * con[i][j][k];
+					partialSum += p[k] * conflict[i][j][k];
 				}
 				obj += conflicts[i][j] * partialSum;
 			}
@@ -577,6 +593,10 @@ public class Generator implements Runnable {
 		return obj / S;
 	}
 
+	/**
+	 * This method returns the best solution generated
+	 * @return the best solution generated
+	 */
 	public int[] getSolution() {
 		return solution;
 	}

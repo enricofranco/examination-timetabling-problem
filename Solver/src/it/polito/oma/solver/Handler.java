@@ -34,6 +34,19 @@ public class Handler {
 	private int[][][] conflict;
 	private int[] solution;
 	
+	private long timeStart;
+	private long timeout;
+	
+	/**
+	 * This method creates a new Handler
+	 * @param timeStart - instant when the program started, expressed in nanosecond
+	 * @param timeout - max time to execute the program, expressed in second
+	 */
+	public Handler(long timeStart, long timeout) {
+		this.timeStart = timeStart;
+		this.timeout = timeout;
+	}
+
 	/**
 	 * This method loads all the instances into local variables.
 	 * @param path The path of all the files to load
@@ -129,6 +142,8 @@ public class Handler {
 	 * This method initializes the vectors used by the objective function.
 	 */
 	public void initialize() {
+		int[] bestSolution = new int[E];
+		double bestOF = Double.MAX_VALUE;
 		conflictWeight = new int[E][E];
 		conflict = new int[E][E][PENALTIES];
 		solution = new int[E];
@@ -138,41 +153,57 @@ public class Handler {
 		/*
 		 * Threads creation
 		 */
-		int[] threadTake=new int[THREADS_NUMBER];
+		boolean[] threadTaken = new boolean[THREADS_NUMBER];
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
-		long time=System.nanoTime();
+		// long time = System.nanoTime();
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, conflictWeight,time,S,p);
+			generators[i] = new Generator(T, exams, conflictWeight, timeStart, S, p, timeout);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
-			threadTake[i]=0;
+			threadTaken[i] = false;
 		}
 
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			/*
 			 * For each thread, wait for a solution, then check feasibility
 			 */
-			int k=0;
+			int k = 0;
 			do {
 				k++;
-				if(k>=THREADS_NUMBER) {
-					k=0;
+				if(k >= THREADS_NUMBER) {
+					k = 0;
 				}
 			}
-			while(t[k].getState() != Thread.State.TERMINATED || threadTake[k]==1);
-			threadTake[k]=1;
+			while(t[k].getState() != Thread.State.TERMINATED || threadTaken[k]);
+			threadTaken[k] = true;
 			solution = generators[k].getSolution();
+			
+			if(bestOF == Double.MAX_VALUE) { // First value returned
+				bestSolution = solution;
+				if(checkFeasibility()) {
+					buildDistancies();
+					bestOF = objectiveFunction();
+				}
+			}
+			
 			if(checkFeasibility()) {
+				double ofValue;
 				buildDistancies();
-				System.out.println("Thread "+k+" Objective function value: " + objectiveFunction() +" tempo "
-						+ ""+((float)System.nanoTime()-time)/1000000000);
+				System.out.println("Thread "+ k + " Objective function value: " + objectiveFunction()
+						+ ". Tempo " + (System.nanoTime()-timeStart)/1000000000.0);
+				ofValue = objectiveFunction();
+				if(ofValue < bestOF) {
+					bestOF = ofValue;
+					bestSolution = solution;
+				}
 			} else {
-				System.out.println("Unfeasible solution " + totalConflicts(solution));
-				System.out.println("." + this.totalConflicts(solution)+" tempo "
-						+ ""+(float)(System.nanoTime()-time)/1000000000);
+				System.out.println("Unfeasible solution " + totalConflicts()
+						+ ". Tempo " + (System.nanoTime()-timeStart)/1000000000.0);
 			}
 		}
+		
+		solution = bestSolution;
 	}
 	
 	/**
@@ -180,7 +211,7 @@ public class Handler {
 	 * @param solution the solution vector
 	 * @return number of conflicts
 	 */
-	public int totalConflicts(int [] solution) {
+	public int totalConflicts() {
 		int conflicts=0;
 		int i, j;
 		for(i = 0; i < E; i++) {

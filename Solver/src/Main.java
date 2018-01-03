@@ -11,8 +11,9 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		long timeStart = System.nanoTime(); // Start timer
+		long timeout = 7;
 		String instanceName = "instance03";
-		Handler h = new Handler();
+		Handler h = new Handler(timeStart, timeout);
 		
 		// Read files
 		try {
