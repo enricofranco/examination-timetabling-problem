@@ -143,7 +143,7 @@ public class Handler {
 		Thread t[] = new Thread[THREADS_NUMBER];
 		long time=System.nanoTime();
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
-			generators[i] = new Generator(T, exams, conflictWeight);
+			generators[i] = new Generator(T, exams, conflictWeight,time,S,p);
 			t[i] = new Thread(generators[i]);
 			t[i].start();
 			threadTake[i]=0;
