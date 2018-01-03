@@ -393,6 +393,20 @@ public class Generator implements Runnable {
 				for (Exam e : exams.values()) {
 					solution[e.getId() - 1] = e.getTimeSlot().getId();
 				}
+				
+//				Exam e1 = exams.get(rand.nextInt(E) + 1);
+//				ArrayList<Exam> list = new ArrayList<>();
+//				t1 = e1.getTimeSlot().getId() - 1;
+//				
+//				do {
+//					t2 = rand.nextInt(T);
+//				} while (t2 == t1);
+//				
+//				timeslotsArray[t1].subExams(e1);
+//				list.add(e1);
+//				
+//				exchangeExams(timeslotsArray[t1].getExams(), timeslotsArray[t2].getExams(), list, timeslotsArray[t1], timeslotsArray[t2]);
+				
 				this.buildDistancies();
 				objectiveFunction = this.objectiveFunction();
 				for (int i = 0; i < E; i++) {
@@ -492,6 +506,7 @@ public class Generator implements Runnable {
 							solution[e.getId() - 1] = e.getTimeSlot().getId();
 						}
 						bestObjectiveFunction = objectiveFunction;
+						System.out.println(" bof" + " " + bestObjectiveFunction + " initSol " + initOf);
 					} else {
 						count++;
 					}
@@ -506,6 +521,36 @@ public class Generator implements Runnable {
 
 		}
 
+	}
+	
+	private void exchangeExams(Map<Integer, Exam> t1, Map<Integer, Exam> t2, ArrayList<Exam> e1, TimeSlot tpos1, TimeSlot tpos2) {
+		
+		if(e1.size() == 0) {
+			return;
+		}
+		
+		ArrayList<Exam> e2 = new ArrayList<>();
+		
+		for(Exam examL:e1) {
+			for(Exam examT:t2.values()) {
+				if(examT.searchConflictWithExam(examL)) {
+					if(!e2.contains(examT))
+						e2.add(examT);
+				}
+			}
+		}
+		
+		for(Exam examL:e1) {
+			tpos2.addExams(examL);
+			examL.setTimeSlot(tpos2);
+		}
+		
+		for(Exam e:e2) {
+			tpos2.subExams(e);
+		}
+		
+		
+		exchangeExams(t2, t1, e2, tpos2, tpos1);
 	}
 
 	private void buildDistancies() {
