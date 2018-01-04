@@ -13,7 +13,6 @@ public class Exam {
 	private List<Exam> examsInConflict = new ArrayList<Exam>();
 	private boolean flagIsChanged = false;
 	
-	
 	public Exam(int id, int enrolledStudents) {
 		this.id = id;
 		this.enrolledStudents = enrolledStudents;
@@ -28,15 +27,15 @@ public class Exam {
 		return enrolledStudents;
 	}
 	
-	public void setTake() {
+	public void setTaken() {
 		taken = true;
 	}
 	
-	public void setNoTake() {
+	public void setUntaken() {
 		taken = false;
 	}
 	
-	public boolean getTake() {
+	public boolean isTaken() {
 		return taken;
 	}
 	
@@ -56,7 +55,7 @@ public class Exam {
 	}
 	
 	public void setTimeSlot(TimeSlot ts) {
-		this.timeSlot=ts;
+		this.timeSlot = ts;
 	}
 	
 	public TimeSlot getTimeSlot() {

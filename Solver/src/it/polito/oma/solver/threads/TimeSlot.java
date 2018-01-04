@@ -36,7 +36,7 @@ public class TimeSlot {
 	
 	public void addExams(Exam exam) {
 		exams.put(exam.getId(), exam);
-		exam.setTake();
+		exam.setTaken();
 		for(Exam examInConflict:exam.getExamConflict()) {
 			this.addConflict(examInConflict.getId());
 		}
@@ -44,7 +44,7 @@ public class TimeSlot {
 
 	public void subExams(Exam exam) {
 		exams.remove(exam.getId());
-		exam.setNoTake();
+		exam.setUntaken();
 		for(Exam examInConflict:exam.getExamConflict()) {
 			this.subConflict(examInConflict.getId());
 		}

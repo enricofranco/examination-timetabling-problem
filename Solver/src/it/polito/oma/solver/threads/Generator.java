@@ -127,7 +127,7 @@ public class Generator implements Runnable {
 		int examId;
 		for (int i = 0; i < T; i++) {
 			for (Exam exam : exams.values()) {
-				if (!exam.getTake()) {
+				if (!exam.isTaken()) {
 					examId = exam.getId();
 					if (timeslotsArray[i].isInConflict(examId) == 0) {
 						timeslotsArray[i].addExams(exam);
@@ -185,7 +185,7 @@ public class Generator implements Runnable {
 	private LinkedHashMap<Integer, Exam> unsignedExams() {
 		LinkedHashMap<Integer, Exam> examsNotTaken = new LinkedHashMap<>();
 		for (Exam e : exams.values()) {
-			if (!e.getTake()) {
+			if (!e.isTaken()) {
 				examsNotTaken.put(e.getId(), e);
 			}
 		}
@@ -202,7 +202,7 @@ public class Generator implements Runnable {
 		timeslotPosition = 0;
 		for (Exam exam : exams.values()) {
 			examId = exam.getId();
-			if (exam.getTake()) {
+			if (exam.isTaken()) {
 				for (int i = 0; i < T; i++) {/* Search a free timeslot */
 					if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
 							&& !tabooList.checkTaboo(timeslotsArray[i], exam)) {

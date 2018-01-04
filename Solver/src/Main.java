@@ -11,8 +11,28 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		long timeStart = System.nanoTime(); // Start timer
-		long timeout = 5;
-		String instanceName = "instance03";
+		long timeout = 0;
+		String instanceName;
+		
+		if(args.length < 3) {
+			displayErrorMessage("");
+			System.exit(1);
+		}
+		
+		instanceName = args[0];
+		
+		if(! args[1].equalsIgnoreCase("-t")) {
+			displayErrorMessage("Unvalid option \"" + args[1] + "\".");
+			System.exit(1);
+		}
+		
+		try {
+			timeout = Long.valueOf(args[2]);
+		} catch(NumberFormatException e) {
+			displayErrorMessage("Unvalid timeout. It must be an integer number.");
+			System.exit(1);
+		}
+		
 		Handler h = new Handler(timeStart, timeout);
 		
 		// Read files
@@ -38,4 +58,10 @@ public class Main {
 		
 		System.out.println("Tempo Esecuzione " + (System.nanoTime() - timeStart) / 1000000000.0);
 	}
+	
+	private static void displayErrorMessage(String description) {
+		System.err.println("Parameters error. " + description +
+				"\nThe correct usage is ETPsolver_OMAAL_group09.exe instancename -t timelimit.");
+	}
+	
 }
