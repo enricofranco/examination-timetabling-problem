@@ -49,7 +49,7 @@ public class Generator implements Runnable {
 	Random rand = new Random(System.nanoTime());
 
 	/**
-	 * Set variables into the random generator
+	 * This method creates a new Generator and sets its parameters.
 	 * @param T - number of timeslots available
 	 * @param exams - map containing all exams to assign
 	 * @param conflictWeight - matrix containing the conflicts among each pair of exams
@@ -102,7 +102,7 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method randomize the exams
+	 * This method randomizes the exams.
 	 */
 	private void randomizeExams() {
 		int[] examRandom = new int[E];
@@ -142,7 +142,7 @@ public class Generator implements Runnable {
 	/**
 	 * With this method unassigned exams are assigned to the slot with the smallest number of
 	 * conflicts, then the other exams in conflicts, are removed. The method ends when
-	 * there are no exam to assign
+	 * there are no exam to assign.
 	 */
 	private void feasibleSearch() {
 		examsNotTaken = unsignedExams();
@@ -170,7 +170,7 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method save the current solution
+	 * This method save the current solution.
 	 */
 	private void saveSolution() {
 		for (Exam e : exams.values()) {
@@ -179,8 +179,8 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method create the map of not taken exams
-	 * @return LinkedHashMap of not taken exams
+	 * This method creates the map of not taken exams
+	 * @return LinkedHashMap of not taken exams.
 	 */
 	private LinkedHashMap<Integer, Exam> unsignedExams() {
 		LinkedHashMap<Integer, Exam> examsNotTaken = new LinkedHashMap<>();
@@ -194,7 +194,7 @@ public class Generator implements Runnable {
 
 	/**
 	 * For each exam, this method changes the state of an exam, if the
-	 * exam is in a timeslot and there are no conflicts with other timeslots
+	 * exam is in a timeslot and there are no conflicts with other timeslots.
 	 */
 	private void mutation() {
 		int examId;
@@ -227,9 +227,9 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * In this method, for each not taken exam, search the first timeslot with the
-	 * smallest number of conflicts, then remove all the other exam in conflict with
-	 * the added exam.
+	 * This method, for each not taken exam, searches the first timeslot with the
+	 * smallest number of conflicts, then it removes all the other exam in conflict with
+	 * the added one.
 	 */
 	private void forcedInsertion() {
 		LinkedHashMap<Integer, Exam> examsToAdd = new LinkedHashMap<Integer, Exam>();
@@ -284,7 +284,7 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method updates the control parameter
+	 * This method updates the control parameter.
 	 */
 	private void updateControl() {
 		if (numberExamsWithoutTimeslot < minExamWithoutTimeslot) {
@@ -303,7 +303,7 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method try to optimize a feasible solution
+	 * This method tries to optimize a feasible solution.
 	 */
 	public void optimization() {
 		buildDistancies();
@@ -313,22 +313,22 @@ public class Generator implements Runnable {
 		int examId;
 		boolean slotAvailable = false;
 		int count = 0;
-		int t1, t2;
+		int t1;
 		
 		//Debug variables
 //		double initOf;
 //		initOf = objectiveFunction;
 		/**
-		 * loop until the timeout expires
+		 * Loop until the timeout expires
 		 */
 		System.out.println("optimization");
 		control = 0;
 		
-		while (((float) System.nanoTime() - time) < timeout) {
+		while ((System.nanoTime() - time) < timeout) {
 			control++;
 			if (count > E) {/*Mutation of two timeslots*/
 				int timeSlotBest;
-				double ofBest=Double.MAX_VALUE;
+				double ofBest = Double.MAX_VALUE;
 				int[] tmpSol = new int[E];
 				Map<Integer, Exam> examsT1 = new HashMap<>();
 				Map<Integer, Exam> examsT2 = new HashMap<>();
@@ -339,10 +339,7 @@ public class Generator implements Runnable {
 				
 				//Get two random timeslots
 				t1 = rand.nextInt(T);
-				do {
-					t2 = rand.nextInt(T);
-				} while (t2 == t1);
-				timeSlotBest=t1;
+				timeSlotBest = t1;
 				
 				//Save previous solution temporarily
 				for (int i = 0; i < E; i++) {
@@ -351,7 +348,7 @@ public class Generator implements Runnable {
 				
 				
 				/*
-				 * For each timeslot, find the best one for make the switch
+				 * For each timeslot, find the best one to make the switch
 				 */
 				for (int i = 0; i < T; i++) {
 					if (t1 != i) {
@@ -365,9 +362,9 @@ public class Generator implements Runnable {
 						this.buildDistancies();
 						objectiveFunction = this.objectiveFunction();
 						
-						if(objectiveFunction<ofBest) {
-							ofBest=objectiveFunction;
-							timeSlotBest=i;
+						if(objectiveFunction < ofBest) {
+							ofBest = objectiveFunction;
+							timeSlotBest = i;
 						}
 						
 						changeExamsTimeslot(examsT1, i, examsT2, t1);
@@ -412,7 +409,7 @@ public class Generator implements Runnable {
 					
 					double bestDifference = Integer.MAX_VALUE;
 					
-					//Estimates all the possible difference of Obj Function and select the best timeslot
+					//Estimate all the possible difference of the objective function and select the best timeslot
 					for (int j = 0; j < timeslotPosition; j++) {
 						TimeSlot t = timeslotAvailable[j];
 						int timeSlotIdNext = t.getId();
@@ -458,11 +455,11 @@ public class Generator implements Runnable {
 	}
 
 	/**
-	 * This method make the switch between exams of two timeslots
-	 * @param examsT1
-	 * @param t1
-	 * @param examsT2
-	 * @param t2
+	 * This method make the switch between exams of two timeslots.
+	 * @param examsT1 - map of the exams in first timeslot
+	 * @param t1 - id of the first timeslot
+	 * @param examsT2 - map of exams in second timeslot
+	 * @param t2 - id of the second timeslot
 	 */
 	private void changeExamsTimeslot(Map<Integer, Exam> examsT1, int t1, Map<Integer, Exam> examsT2, int t2) {
 		for (Exam e : examsT1.values()) {
@@ -489,10 +486,10 @@ public class Generator implements Runnable {
 	}
 	
 	/**
-	 * This method search all the free timeslots for a given exam
-	 * @param examId
-	 * @param exam
-	 * @return true if there are free timeslots, false otherwise
+	 * This method searches all the free timeslots for a given exam
+	 * @param examId - the id of the exam which look for free timeslot
+	 * @param exam - the exam which look for free timeslot
+	 * @return true if there are free timeslots, false otherwise.
 	 */
 	private boolean searchFreeTimeslots(int examId, Exam exam) {
 		boolean slotAvailable = false;
@@ -510,9 +507,9 @@ public class Generator implements Runnable {
 	
 	/**
 	 * This method estimates the OF if an exam is moved into a new timeslot
-	 * @param timeSlotId
-	 * @param exam
-	 * @return OF valued
+	 * @param timeSlotId - id of the timeslot where the exam may be assigned
+	 * @param exam - exam which may be assigned to the timeslot
+	 * @return the objective function value.
 	 */
 	private double estimateOF(int timeSlotId, Exam exam) {
 		double value = 0;
@@ -575,7 +572,7 @@ public class Generator implements Runnable {
 	
 	/**
 	 * This method describes the objective function and resolve it, for the current solution
-	 * @return result of the objective function.
+	 * @return the objective function value.
 	 */
 	public double objectiveFunction() {
 		double obj = 0.0;
@@ -593,7 +590,7 @@ public class Generator implements Runnable {
 
 	/**
 	 * This method returns the best solution generated
-	 * @return the best solution generated
+	 * @return the best solution generated.
 	 */
 	public int[] getSolution() {
 		return solution;

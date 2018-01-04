@@ -38,7 +38,7 @@ public class Handler {
 	private long timeout;
 	
 	/**
-	 * This method creates a new Handler
+	 * This method creates a new Handler.
 	 * @param timeStart - instant when the program started, expressed in nanosecond
 	 * @param timeout - max time to execute the program, expressed in second
 	 */
@@ -123,7 +123,7 @@ public class Handler {
 	}
 	
 	/**
-	 * This method writes a solution into a file
+	 * This method writes a solution into a file.
 	 * @param instanceName The name of the running instance
 	 * @throws IOException
 	 */
@@ -207,7 +207,7 @@ public class Handler {
 	}
 	
 	/**
-	 * this method returns the sum of all conflicts in the partial solution
+	 * This method returns the sum of all conflicts in the partial solution.
 	 * @param solution the solution vector
 	 * @return number of conflicts
 	 */
@@ -305,7 +305,7 @@ public class Handler {
 	
 	/**
 	 * This method describes the objective function and resolve it, for the current solution
-	 * @return result of the objective function.
+	 * @return the objective function value.
 	 */
 	public double objectiveFunction() {
 		double obj = 0.0;

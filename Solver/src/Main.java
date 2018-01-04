@@ -11,13 +11,13 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		long timeStart = System.nanoTime(); // Start timer
-		long timeout = 60;
-		String instanceName = "instance01";
+		long timeout = 5;
+		String instanceName = "instance03";
 		Handler h = new Handler(timeStart, timeout);
 		
 		// Read files
 		try {
-			h.loadInstance("./src/demo/" + instanceName);
+			h.loadInstance(instanceName);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
