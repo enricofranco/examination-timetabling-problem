@@ -1,0 +1,19 @@
+\section*{Conclusions}
+Our algorithm is very fast in the search of feasible solution (a few seconds), despite of \emph{instance06}, due to its huge number of exams. The assignation loop cycles for some hundreds of thousands of iterations because it continuously add and remove exams in timeslots. In this case, the algorithm is able to find a feasible solution in 20-25 seconds.
+
+\paragraph*{Benchmark}
+\begin{center}
+\begin{tabular}{lrrc}
+\toprule
+Instance	&	Benchmark	&	Our best value	&	Time (s)	\\
+\midrule
+instance01	&	157.033	&	157.337	&	30	\\
+instance02	&	34.709	&	37.666	&	45	\\
+instance03	&	32.627	&	&		\\
+instance04	&	7.717	&	&		\\
+instance05	&	12.901	&	&		\\
+instance06	&	3.045	&	&		\\
+instance07	&	10.050	&	&		\\
+\bottomrule
+\end{tabular}
+\end{center}
