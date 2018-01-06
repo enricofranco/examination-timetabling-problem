@@ -143,6 +143,7 @@ public class Handler {
 				r.write(s);
 			}
 		}
+		buildDistancies();
 		System.out.println("Best solution found written on file " + fileName
 				+ "\nObjective function: " + objectiveFunction());
 	}
@@ -205,11 +206,10 @@ public class Handler {
 			}
 			
 			if(isFeasible()) {
-				double ofValue;
 				buildDistancies();
-				System.out.println("Solution "+ (i+1) + ". Objective function value: " + objectiveFunction()
+				double ofValue = objectiveFunction();
+				System.out.println("Solution "+ (i+1) + ". Objective function value: " + ofValue
 						+ ". Time " + (System.nanoTime()-timeStart)/1000000000.0);
-				ofValue = objectiveFunction();
 				if(ofValue < bestOF) {
 					bestOF = ofValue;
 					bestSolution = solution;
