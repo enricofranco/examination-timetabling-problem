@@ -11,7 +11,7 @@ Loop until the timeout expires:
 \item Search the timeslots where the exam does not conflict and where the move is not tabu
 \item If there exists at least one available timeslot, for each one of them:
 \begin{enumerate}
-\item Swap the exams
+\item Move the exam to the new timeslot
 \item Evaluate the objective function
 \end{enumerate}
 \item Swap to the best position and mark the move as tabu
@@ -29,7 +29,7 @@ We mutate the solution after $|E|$, i.e. number of exams, iteration in the main 
 \item Evaluate the objective function for each swap
 \item Save the best position
 \end{enumerate}
-\item If there exists a best timeslot, i.e. the exams are not in best position yet, then swap the exams and mark the move as tabu
+\item I choose the best timeslot among the available ones, then swap the exams and mark the move as tabu
 \item Save the new solution and evaluate its objective function
 \item If it is an improving one, save it. Otherwise restore the previous saved one
 \end{enumerate}
