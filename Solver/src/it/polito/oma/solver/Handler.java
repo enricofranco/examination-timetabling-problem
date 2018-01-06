@@ -15,7 +15,7 @@ public class Handler {
 	private static final int PENALTIES = 5;
 	private static final int BASE_PENALTY = 2;
 	private static final String GROUP = "OMAAL_group09.sol";
-	private static final int THREADS_NUMBER = 4;
+	private static final int THREADS_NUMBER = 3;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();

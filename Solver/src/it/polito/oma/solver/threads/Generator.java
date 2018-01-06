@@ -198,7 +198,8 @@ public class Generator implements Runnable {
 			if (exam.isTaken()) {
 				for (int i = 0; i < T; i++) {/* Search a free timeslot */
 					if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
-							&& !tabooList.checkTaboo(timeslotsArray[i], exam)) {
+							&& !tabooList.checkTaboo(timeslotsArray[i], exam)
+									&& timeslotsArray[i].getId()!=exam.getTimeSlot().getId()) {
 						mutationFlag = true;
 						timeslotAvailable[timeslotPosition] = timeslotsArray[i];
 						timeslotPosition++;
@@ -453,10 +454,10 @@ public class Generator implements Runnable {
 	private void changeExamsTimeslot(Map<Integer, Exam> examsT1, int t1, Map<Integer, Exam> examsT2, int t2) {
 		for (Exam e : examsT1.values()) {
 			timeslotsArray[t1].subExams(e);
-		}
-		
-		for (Exam e : examsT2.values()) {
-			timeslotsArray[t2].subExams(e);
+			timeslotsArray[t2].addExams(e);
+			if(setTaboo)
+				optimizationTabooList.setTaboo(e.getTimeSlot(), e);
+			e.setTimeSlot(timeslotsArray[t2]);
 		}
 		
 		for (Exam e : examsT2.values()) {
@@ -464,13 +465,7 @@ public class Generator implements Runnable {
 			if(setTaboo)
 				optimizationTabooList.setTaboo(e.getTimeSlot(), e);
 			e.setTimeSlot(timeslotsArray[t1]);
-		}
-		
-		for (Exam e : examsT1.values()) {
-			timeslotsArray[t2].addExams(e);
-			if(setTaboo)
-				optimizationTabooList.setTaboo(e.getTimeSlot(), e);
-			e.setTimeSlot(timeslotsArray[t2]);
+			timeslotsArray[t2].subExams(e);
 		}
 	}
 	
