@@ -312,7 +312,8 @@ public class Generator implements Runnable {
 //		double initOf;
 //		initOf = objectiveFunction;
 		
-		System.out.println("Optimization of a feasible solution..." + " Time: " + (System.nanoTime() - timeStart)/1000000000.0);
+		System.out.format("Optimization of a feasible solution. Time: %.3f s%n",
+				(System.nanoTime() - timeStart)/1000000000.0);
 		control = 0;
 		
 		// Loop until timeout expires

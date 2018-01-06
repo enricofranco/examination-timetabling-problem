@@ -139,13 +139,14 @@ public class Handler {
 		
 		try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
 			for(int i = 0; i < E; ++i) {
-				String s = String.format("%d %d\n", i+1, solution[i]);
+				String s = String.format("%d %d%n", i+1, solution[i]);
 				r.write(s);
 			}
 		}
 		buildDistancies();
-		System.out.println("Best solution found written on file " + fileName
-				+ "\nObjective function: " + objectiveFunction());
+		System.out.format("Best solution found written on file " + fileName
+				+ "%nObjective function: %.6f%n",
+				objectiveFunction());
 	}
 	
 	/**
@@ -208,15 +209,15 @@ public class Handler {
 			if(isFeasible()) {
 				buildDistancies();
 				double ofValue = objectiveFunction();
-				System.out.println("Solution "+ (i+1) + ". Objective function value: " + ofValue
-						+ ". Time " + (System.nanoTime()-timeStart)/1000000000.0);
+				System.out.format("Solution %d. Objective function value: %.6f. Time %.3f s%n",
+						i+1, ofValue, (System.nanoTime()-timeStart)/1000000000.0);
 				if(ofValue < bestOF) {
 					bestOF = ofValue;
 					bestSolution = solution;
 				}
 			} else {
-				System.out.println("Solution "+ (i+1) + ". Unfeasible: " + totalConflicts() + " conflicts"
-						+ ". Time " + (System.nanoTime()-timeStart)/1000000000.0);
+				System.out.format("Solution %d. Unfeasible: %d conflicts. Time %.3f s%n",
+						i+1, totalConflicts(), (System.nanoTime()-timeStart)/1000000000.0);
 			}
 		}
 		

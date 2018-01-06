@@ -60,7 +60,8 @@ public class Main {
 			System.exit(OUTPUT_FILE_ERROR);
 		}
 		
-		System.out.println("Execution time: " + (System.nanoTime() - timeStart) / 1000000000.0);
+		System.out.format("Execution time: %.3f s",
+				(System.nanoTime() - timeStart) / 1000000000.0);
 	}
 	
 	private static void displayErrorMessage(String description) {
