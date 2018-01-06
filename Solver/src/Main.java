@@ -5,6 +5,10 @@ import it.polito.oma.solver.Handler;
 
 public class Main {
 
+	static final int PARAMETERS_ERROR = 1001;
+	static final int INPUT_FILE_ERROR = 1002;
+	static final int OUTPUT_FILE_ERROR = 1003;
+	
 	/**
 	 * args format: instancename -t timelimit
 	 * @param args Command line arguments
@@ -16,21 +20,21 @@ public class Main {
 		
 		if(args.length < 3) {
 			displayErrorMessage("");
-			System.exit(1);
+			System.exit(PARAMETERS_ERROR);
 		}
 		
 		instanceName = args[0];
 		
 		if(! args[1].equalsIgnoreCase("-t")) {
 			displayErrorMessage("Unvalid option \"" + args[1] + "\".");
-			System.exit(1);
+			System.exit(PARAMETERS_ERROR);
 		}
 		
 		try {
 			timeout = Long.valueOf(args[2]);
 		} catch(NumberFormatException e) {
 			displayErrorMessage("Unvalid timeout. It must be an integer number.");
-			System.exit(1);
+			System.exit(PARAMETERS_ERROR);
 		}
 		
 		Handler h = new Handler(timeStart, timeout);
@@ -39,11 +43,11 @@ public class Main {
 		try {
 			h.loadInstance(instanceName);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Unvalid instance name. Files not found.");
+			System.exit(INPUT_FILE_ERROR);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Unvalid instance name. Files not found.");
+			System.exit(INPUT_FILE_ERROR);
 		}
 		
 		h.initialize();
@@ -52,11 +56,11 @@ public class Main {
 		try {
 			h.writeSolution(instanceName);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Error occured during writing solution file. Execution aborted.");
+			System.exit(OUTPUT_FILE_ERROR);
 		}
 		
-		System.out.println("Tempo Esecuzione " + (System.nanoTime() - timeStart) / 1000000000.0);
+		System.out.println("Execution time: " + (System.nanoTime() - timeStart) / 1000000000.0);
 	}
 	
 	private static void displayErrorMessage(String description) {

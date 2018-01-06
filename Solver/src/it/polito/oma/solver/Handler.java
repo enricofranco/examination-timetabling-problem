@@ -12,10 +12,10 @@ import java.util.Map;
 import it.polito.oma.solver.threads.Generator;
 
 public class Handler {
-	private int PENALTIES = 5;
-	private int BASE_PENALTY = 2;
-	private String GROUP = "OMAAL_group09.sol";
-	private int THREADS_NUMBER = 3;
+	private static final int PENALTIES = 5;
+	private static final int BASE_PENALTY = 2;
+	private static final String GROUP = "OMAAL_group09.sol";
+	private static final int THREADS_NUMBER = 4;
 	
 	//Exams
 	private Map<Integer, Exam> exams = new HashMap<>();
@@ -34,8 +34,8 @@ public class Handler {
 	private int[][][] conflict;
 	private int[] solution;
 	
-	private long timeStart;
-	private long timeout;
+	private final long timeStart;
+	private final long timeout;
 	
 	/**
 	 * This method creates a new Handler.
@@ -129,13 +129,22 @@ public class Handler {
 	 */
 	public void writeSolution(String instanceName) throws IOException {
 		String fileName = instanceName + GROUP;
-		if(! checkFeasibility()) return; // If the solution is not feasible, do not write the file
+		if(! isFeasible()) {
+			try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
+				r.write("");
+			}
+			System.out.println("No feasible solution is found. File " + fileName + " was written empty.");
+			return;
+		} // If the solution is not feasible, do not write the file
+		
 		try(BufferedWriter r = new BufferedWriter(new FileWriter(fileName))) {
 			for(int i = 0; i < E; ++i) {
-				String s = String.format("%04d %d\n", i+1, solution[i]);
+				String s = String.format("%d %d\n", i+1, solution[i]);
 				r.write(s);
 			}
 		}
+		System.out.println("Best solution found written on file " + fileName
+				+ "\nObjective function: " + objectiveFunction());
 	}
 	
 	/**
@@ -156,7 +165,7 @@ public class Handler {
 		boolean[] threadTaken = new boolean[THREADS_NUMBER];
 		Generator[] generators = new Generator[THREADS_NUMBER];
 		Thread t[] = new Thread[THREADS_NUMBER];
-		// long time = System.nanoTime();
+
 		for(int i = 0; i < THREADS_NUMBER; ++i) {
 			generators[i] = new Generator(T, exams, conflictWeight, timeStart, S, p, timeout);
 			t[i] = new Thread(generators[i]);
@@ -177,29 +186,37 @@ public class Handler {
 			}
 			while(t[k].getState() != Thread.State.TERMINATED || threadTaken[k]);
 			threadTaken[k] = true;
+
+			try {
+				t[k].join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			solution = generators[k].getSolution();
 			
 			if(bestOF == Double.MAX_VALUE) { // First value returned
 				bestSolution = solution;
-				if(checkFeasibility()) {
+				if(isFeasible()) {
 					buildDistancies();
 					bestOF = objectiveFunction();
 				}
 			}
 			
-			if(checkFeasibility()) {
+			if(isFeasible()) {
 				double ofValue;
 				buildDistancies();
-				System.out.println("Thread "+ k + " Objective function value: " + objectiveFunction()
-						+ ". Tempo " + (System.nanoTime()-timeStart)/1000000000.0);
+				System.out.println("Solution "+ (i+1) + ". Objective function value: " + objectiveFunction()
+						+ ". Time " + (System.nanoTime()-timeStart)/1000000000.0);
 				ofValue = objectiveFunction();
 				if(ofValue < bestOF) {
 					bestOF = ofValue;
 					bestSolution = solution;
 				}
 			} else {
-				System.out.println("Unfeasible solution " + totalConflicts()
-						+ ". Tempo " + (System.nanoTime()-timeStart)/1000000000.0);
+				System.out.println("Solution "+ (i+1) + ". Unfeasible: " + totalConflicts() + " conflicts"
+						+ ". Time " + (System.nanoTime()-timeStart)/1000000000.0);
 			}
 		}
 		
@@ -289,7 +306,7 @@ public class Handler {
 	 * This method checks the feasibility of the founded solution.
 	 * @return true if the solution is feasible, false otherwise.
 	 */
-	public boolean checkFeasibility() {
+	public boolean isFeasible() {
 		for(int i = 0; i < E; ++i) {
 			if(solution[i] < 1 || solution[i] > T) // Invalid timeslot
 				return false;

@@ -3,27 +3,23 @@ package it.polito.oma.solver.threads;
 import java.util.*;
 import it.polito.oma.solver.*;
 
-/**
- * @author enrico
- *
- */
 public class Generator implements Runnable {
 
 	//OF-related variables
-	private int PENALTIES = 5;
-	private int[] p;
-	private int[][] conflictWeight;
+	private final int PENALTIES = 5;
+	private final int[] p;
+	private final int[][] conflictWeight;
 	private int[][][] conflict;
-	private int S;
+	private final int S;
 	
 	// Timeslots
-	private int T;
+	private final int T;
 	private TimeSlot[] timeslotsArray,
 						timeslotAvailable;
 	private TimeSlot timeslotChange;
 
 	// Exams
-	private Map<Integer, Exam> examsInit;
+	private final Map<Integer, Exam> examsInit;
 	private Map<Integer, Exam> exams;
 	private LinkedHashMap<Integer, Exam> examsNotTaken;
 	private int E,
@@ -44,8 +40,8 @@ public class Generator implements Runnable {
 	private int[] solution;
 
 	// Other
-	private long time;
-	private long timeout;
+	private final long timeStart;
+	private final long timeout;
 	Random rand = new Random(System.nanoTime());
 
 	/**
@@ -68,7 +64,7 @@ public class Generator implements Runnable {
 		this.conflictWeight = conflictWeight;
 		this.p = p;
 		this.S = S;
-		this.time = timeStart;
+		this.timeStart = timeStart;
 		this.timeout = timeout * 1000000000; // Conversion in nanosecond to avoid calculus in the optimization loop
 		
 		buildExamMap(exams);
@@ -85,19 +81,22 @@ public class Generator implements Runnable {
 
 	@Override
 	public void run() {
-		// set random parameters
+		// Set random parameters
 		randomizeExams();
 		
-		//First of all, assign all the exam in a greedy way
+		// First of all, assign all the exam in a greedy way
 		greedyAssignment();
 		
-		//Then, for the not taken exams, find the first feasible solution
+		// Then, for the not taken exams, find the first feasible solution
 		feasibleSearch();
 		
-		//Saving the current solution
+		// Saving the current solution
 		saveSolution();
 
-		//When a feasible solution is found, optimize it
+		if(! isFeasibile()) 
+			return;
+
+		// When a feasible solution is found, optimize it
 		optimization();
 	}
 
@@ -146,7 +145,7 @@ public class Generator implements Runnable {
 	 */
 	private void feasibleSearch() {
 		examsNotTaken = unsignedExams();
-		while (!examsNotTaken.values().isEmpty()) {
+		while (!examsNotTaken.values().isEmpty() && (System.nanoTime() - timeStart) < timeout) {
 			if (control == 1000) {
 				/* Mutation */
 				mutation();
@@ -160,12 +159,6 @@ public class Generator implements Runnable {
 			if (minExamWithoutTimeslot < minGlobalConflicts) {
 				minGlobalConflicts = minExamWithoutTimeslot;
 			}
-
-			// System.out.println(numberExamsWithoutTimeslot + " control " + control + " min
-			// " + minExamWithoutTimeslot
-			// + " minGlobal " + minGlobalConflicts + " examMut " + variabileDiTest);
-			//
-			// System.out.println();
 		}
 	}
 
@@ -318,15 +311,14 @@ public class Generator implements Runnable {
 		//Debug variables
 //		double initOf;
 //		initOf = objectiveFunction;
-		/**
-		 * Loop until the timeout expires
-		 */
-		System.out.println("optimization");
+		
+		System.out.println("Optimization of a feasible solution..." + " Time: " + (System.nanoTime() - timeStart)/1000000000.0);
 		control = 0;
 		
-		while ((System.nanoTime() - time) < timeout) {
+		// Loop until timeout expires
+		while ((System.nanoTime() - timeStart) < timeout) {
 			control++;
-			if (count > E) {/*Mutation of two timeslots*/
+			if (count > E) { /*Mutation of two timeslots*/
 				int timeSlotBest;
 				double ofBest = Double.MAX_VALUE;
 				int[] tmpSol = new int[E];
@@ -337,7 +329,6 @@ public class Generator implements Runnable {
 				control = 0;
 				count = 0;
 				
-				//Get two random timeslots
 				t1 = rand.nextInt(T);
 				timeSlotBest = t1;
 				
@@ -424,7 +415,7 @@ public class Generator implements Runnable {
 					double prevDifference;
 					int timeSlotId = exam.getTimeSlot().getId();
 					
-					//estimates the actual difference
+					//Estimates the actual difference
 					prevDifference = estimateOF(timeSlotId, exam);
 					
 					//Calculate the new OF
@@ -439,13 +430,10 @@ public class Generator implements Runnable {
 						count = 0;
 						saveSolution();
 						bestObjectiveFunction = objectiveFunction;
-//						System.out.println(" bof" + " " + bestObjectiveFunction + " initSol " + initOf);
 					} else {
 						count++;
 					}
-					// System.out.println(" of " + objectiveFunction + " bof" + " " +
-					// bestObjectiveFunction + " initSol "
-					// + initOf + " control " + control + " count " + count);
+
 					optimizationTabooList.setTaboo(null, null);
 				}
 			}
@@ -568,6 +556,24 @@ public class Generator implements Runnable {
 				}
 			}
 		}		
+	}
+	
+	/**
+	 * This method checks the feasibility of the founded solution.
+	 * @return true if the solution is feasible, false otherwise.
+	 */
+	public boolean isFeasibile() {
+		for(int i = 0; i < E; ++i) {
+			if(solution[i] < 1 || solution[i] > T) // Invalid timeslot
+				return false;
+			for(int j = 0; j < E; ++j) {
+				if(solution[j] < 1 || solution[j] > T)  // Invalid timeslot
+					return false;
+				if(solution[i] == solution[j] && conflictWeight[i][j] > 0) // Exam in the same timeslot and students in conflict
+					return false;
+			}
+		}
+		return true;
 	}
 	
 	/**
