@@ -17,7 +17,9 @@ Loop until the timeout expires:
 \item Save the new solution.
 \end{enumerate}
 \end{enumerate}
-We mutate the solution after $|E|$, i.e. number of exams, iterations in the main loop. This is an empiric number related to the size of the problem which provides good results.
+Similarly to the previous phase, the size of the taboo list is a critical parameter because a large value would store a large number of forbidden couples timeslot, exam making the search of an available timeslot a difficult operation, while a small value would force a behavior similar to a steepest descent, which conduces to the exploration of local minimums. After several attempts, we notice that a good empiric size is 100.
+
+A mutation is an important but expensive operation in our algorithm. At the beginning, we tried to mutate every 1000 iterations but it was not effective because it would conduce to an exploration of a flat region. We reduced this parameter, realizing that a too little value would entail an unefficient exploration of the solution space and would slow down the execution. We found a good choice in |E|: this value is a trade-off between the mutation cost and a satisfying exploration.
 \paragraph*{Mutation}
 \begin{enumerate}
 \item Choose a random timeslot $t_1$.

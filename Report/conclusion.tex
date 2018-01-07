@@ -6,18 +6,21 @@ Our algorithm is very fast in the search of feasible solution. In most cases, it
 The optimization phase shows the same problem of the previous phase. In fact, this stage is quite fast for all instances and it produces good results which do not improve much for longer running times while, for \emph{instance06}, we noticed that it continues to improve. The reason for this behavior should be, in this case too, the huge number of exams: a single swap between two different timeslots requires to change a larger number of exams on average. Obviously, this slows down the execution of a single optimization cycle and it also affects the overall performance.
 
 \paragraph*{Benchmark}
+In order to evaluate the algorithm performance and gather some statistics we run 60 times each instance using a 60 seconds timeout. We represent with $s\,\%$ the standard deviation weighted on the average value.
 \begin{center}
-\begin{tabular}{lrr}
+\small
+\begin{tabular}{lrrrcc}
 \toprule
-Instance	&	Benchmark	&	Our best value\\
+Instance	&	Benchmark	&	Avg value	&	Max value	&	Avg Gap \%	&	$s\,\%$	\\
 \midrule
-instance01	&	157.033	&	157.131	\\
-instance02	&	34.709	&	36.895	\\
-instance03	&	32.627	&	34.373	\\
-instance04	&	7.717	&	8.364	\\
-instance05	&	12.901	&	14.266	\\
-instance06	&	3.045	&	3.636	\\
-instance07	&	10.050	&	10.543	\\
+instance01	&	157.033		&	157.289		&	157.444		&	0.16		&	0.05	\\
+instance02	&	34.709		&	37.634		&	38.236		&	8.43		&	0.76	\\
+instance03	&	32.627		&	35.039		&	36.359		&	7.39		&	1.35	\\
+instance04	&	7.717		&	8.654		&	8.930		&	12.14		&	1.32	\\
+instance05	&	12.901		&	14.786		&	15.293		&	14.61		&	1.40	\\
+instance06	&	3.045		&	3.790		&	3.916		&	24.48		&	1.55	\\
+instance07	&	10.050		&	10.805		&	11.009		&	7.51		&	0.88	\\
 \bottomrule
 \end{tabular}
 \end{center}
+It is possible to notice the quality of the algorithm, which in most cases produces good results with Gap < 15\% and appreciate its stability. In fact, on every instance it provides the same result, in terms of objective function, with an error < 2\%.
