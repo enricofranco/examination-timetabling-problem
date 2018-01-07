@@ -1,7 +1,7 @@
 \section*{Conclusions}
 In our first attempts to find a set of feasible solutions, we tried simpler approaches, such as a simple taboo list, a steepest descent using first improvement strategy and a quite sophisticated genetic algorithm performing both swaps and random mutations but they were not effective. Because of this difficulties, we adopted a mixed approach. In fact, in both parts we use some greedy concepts, a taboo list and the idea of a periodic mutation to explore a different region in the solution space.
 
-Our algorithm is very fast in the search of feasible solution. In most cases, it provides a set of feasible solutions in less than seconds for all instances, except \emph{instance06}, because of its huge number of exams. The assignation loop cycles for some hundreds of thousands of iterations because it continuously adds and removes exams in different timeslots. In this case, the algorithm is able to find a set of feasible solutions in 10-15 seconds at most.
+Our algorithm is very fast in the search of feasible solution. In most cases, it provides a set of feasible solutions in less than a second for all instances, except \emph{instance06}, because of its huge number of exams. The assignation loop cycles for some hundreds of thousands of iterations because it continuously adds and removes exams in different timeslots. In this case, the algorithm is able to find a set of feasible solutions in 8-10 seconds at most.
 
 The optimization phase shows the same problem of the previous phase. In fact, this stage is quite fast for all instances and it produces good results which do not improve much for longer running times while, for \emph{instance06}, we noticed that it continues to improve. The reason for this behavior should be, in this case too, the huge number of exams: a single swap between two different timeslots requires to change a larger number of exams on average. Obviously, this slows down the execution of a single optimization cycle and it also affects the overall performance.
 
@@ -11,12 +11,12 @@ The optimization phase shows the same problem of the previous phase. In fact, th
 \toprule
 Instance	&	Benchmark	&	Our best value\\
 \midrule
-instance01	&	157.033	&	157.155	\\
-instance02	&	34.709	&	37.266	\\
-instance03	&	32.627	&	34.540	\\
+instance01	&	157.033	&	157.131	\\
+instance02	&	34.709	&	36.895	\\
+instance03	&	32.627	&	34.373	\\
 instance04	&	7.717	&	8.364	\\
 instance05	&	12.901	&	14.266	\\
-instance06	&	3.045	&	3.xxx	\\
+instance06	&	3.045	&	3.636	\\
 instance07	&	10.050	&	10.543	\\
 \bottomrule
 \end{tabular}

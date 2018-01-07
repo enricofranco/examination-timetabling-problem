@@ -4,31 +4,31 @@ So, we exploit the following algorithm:
 
 Loop until the timeout expires:
 \begin{enumerate}
-\item Check if a mutation is needed and mutate consequently
+\item Check if a mutation is needed and mutate consequently.
 \item For each exam:
 \begin{enumerate}
-\item Search the timeslots where the exam does not conflict and where the move is not taboo
+\item Search the timeslots where the exam does not conflict and where the move is not taboo.
 \item If there exists at least one available timeslot, for each one of them:
 \begin{enumerate}
-\item Move the exam to the new timeslot
-\item Evaluate the objective function
+\item Move the exam to the new timeslot.
+\item Evaluate the objective function.
 \end{enumerate}
-\item Swap to the best position and mark the move as taboo
-\item Save the new solution
+\item Swap to the best position and mark the move as taboo.
+\item Save the new solution.
 \end{enumerate}
 \end{enumerate}
 We mutate the solution after $|E|$, i.e. number of exams, iterations in the main loop. This is an empiric number related to the size of the problem which provides good results.
 \paragraph*{Mutation}
 \begin{enumerate}
-\item Choose a random timeslot $t_1$
-\item Save the previous solution temporarily
+\item Choose a random timeslot $t_1$.
+\item Save the previous solution temporarily.
 \item Find the best timeslot to swap the $t_1$ exams into:
 \begin{enumerate}
-\item Swap all exams in $t_1$ with the ones in other timeslots
-\item Evaluate the objective function for each swap
-\item Save the best position
+\item Swap all exams in $t_1$ with the ones in other timeslots.
+\item Evaluate the objective function for each swap.
+\item Save the best position.
 \end{enumerate}
-\item Choose the best timeslot among the available ones, then swap the exams and mark the move as taboo
-\item Save the new solution and evaluate its objective function
-\item If it is an improving solution, keep it. Otherwise, restore the previously saved one
+\item Choose the best timeslot among the available ones, then swap the exams and mark the move as taboo.
+\item Save the new solution and evaluate its objective function.
+\item If it is an improving solution, keep it. Otherwise, restore the previously saved one.
 \end{enumerate}
