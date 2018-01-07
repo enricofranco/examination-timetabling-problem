@@ -2,13 +2,13 @@
 Our algorithm is composed by two main stages:
 \begin{itemize}
 \item Find a feasible solution
-\item Optimize the feasible solution founded in the previous stage
+\item Optimize the feasible solution found in the previous stage
 \end{itemize}
 
-In order to improve the diversification of the algorithm and to explore as much as possible the solution space, we run several parallel threads and finally we choose the best provided solution.
+In order to improve the diversification of the algorithm and to explore as much as possible the solution space, we run several parallel threads and finally we choose the best of the provided solution.
 
 \section*{Feasibile solution search}
-In our approach, we combine a greedy strategy with a tabu list which stores the ``bad'' couples timeslot, exam.
+In our approach, we combine a greedy strategy with a taboo list which stores the ``bad'' couples timeslot, exam.
 
 Starting from a random order of exams, we assign each one to the first timeslot where it does not conflict with any other exam. At the end of this loop, it is highly probable that some exams are not inserted in any timeslot.
 
@@ -17,17 +17,17 @@ Hence, we start a loop that continues until all exams are correctly assigned. In
 \item Check if a mutation is needed and mutate consequently
 \item For each unassigned exam:
 \begin{enumerate}
-\item Search the timeslot with the smallest number of conflicts and where the exam is not tabu
+\item Search the timeslot with the smallest number of conflicts and where the exam is not taboo
 \item Assign the exam to it
-\item Remove all the exams in conflict with the added exam and mark the couple timeslot, exam as tabu
+\item Remove all the exams in conflict with the added exam and mark the couple timeslot, exam as taboo
 \end{enumerate} 
-\item If the number of unassigned exams is lower than the minimum number found as far, update it
-\item If the number of conflicts is lower than the minimum number found as far, update it
+\item If the number of unassigned exams is lower than the minimum number found so far, update it
+\item If the number of conflicts is lower than the minimum number found so far, update it
 \end{enumerate}
 A mutation is needed when it is difficult to improve the solution, i.e. flat region. In this case the procedure described before is not so effective and it is better to make some radical changes in the solution vector.
 \paragraph*{Mutation}
 For each taken exam:
 \begin{enumerate}
-\item Search the timeslots where the exam does not conflict and where the move is not tabu
-\item Move the exam in a random timeslot among the selected ones and mark the couple timeslot, exam as tabu
+\item Search the timeslots where the exam does not conflict and where the move is not taboo
+\item Move the exam in a random timeslot among the selected ones and mark the couple timeslot, exam as taboo
 \end{enumerate}
