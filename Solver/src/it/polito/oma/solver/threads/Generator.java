@@ -65,7 +65,7 @@ public class Generator implements Runnable {
 		this.p = p;
 		this.S = S;
 		this.timeStart = timeStart;
-		this.timeout = timeout * 1000000000; // Conversion in nanosecond to avoid calculus in the optimization loop
+		this.timeout = timeout * 1000000000 - E * 100000000 / 3; // Conversion in nanosecond to avoid calculus in the optimization loop, with a safety margin
 		
 		buildExamMap(exams);
 		buildExamsConflicts();
@@ -308,10 +308,6 @@ public class Generator implements Runnable {
 		boolean slotAvailable = false;
 		int count = 0;
 		int t1;
-		
-		//Debug variables
-//		double initOf;
-//		initOf = objectiveFunction;
 		
 		System.out.format("Optimization of a feasible solution. Time: %.3f s%n",
 				(System.nanoTime() - timeStart)/1000000000.0);
