@@ -26,14 +26,14 @@ public class Main {
 		instanceName = args[0];
 		
 		if(! args[1].equalsIgnoreCase("-t")) {
-			displayErrorMessage("Unvalid option \"" + args[1] + "\".");
+			displayErrorMessage("Invalid option \"" + args[1] + "\".");
 			System.exit(PARAMETERS_ERROR);
 		}
 		
 		try {
 			timeout = Long.valueOf(args[2]);
 		} catch(NumberFormatException e) {
-			displayErrorMessage("Unvalid timeout. It must be an integer number.");
+			displayErrorMessage("Invalid timeout. It must be an integer number.");
 			System.exit(PARAMETERS_ERROR);
 		}
 		
@@ -43,10 +43,10 @@ public class Main {
 		try {
 			h.loadInstance(instanceName);
 		} catch (FileNotFoundException e) {
-			System.err.println("Unvalid instance name. Files not found.");
+			System.err.println("Invalid instance name. Files not found.");
 			System.exit(INPUT_FILE_ERROR);
 		} catch (IOException e) {
-			System.err.println("Unvalid instance name. Files not found.");
+			System.err.println("Invalid instance name. Files not found.");
 			System.exit(INPUT_FILE_ERROR);
 		}
 		
