@@ -1,5 +1,5 @@
 \section*{Solution improvement}
-The idea behind our algorithm is that, in the previous stage, we found some groups of exams which have no conflicts among each other. In order to improve the solution without losing its feasibility, we swap those ``independent'' exams trying to distance the most problematic ones, i.e. those with a lot of students in common.
+The idea behind our algorithm is that, in the previous stage, we found some groups of exams which have no conflicts among each other. In order to improve the solution without losing its feasibility, we we look for an improving solution trying to move each exam in a better timeslot.
 So, we exploit the following algorithm:
 
 Loop until the timeout expires:
@@ -17,7 +17,7 @@ Loop until the timeout expires:
 \item Save the new solution.
 \end{enumerate}
 \end{enumerate}
-Similarly to the previous phase, the size of the taboo list is a critical parameter because a large value would store a large number of forbidden couples timeslot, exam making the search of an available timeslot a difficult operation, while a small value would force a behavior similar to a steepest descent, which conduces to the exploration of local minimums. After several attempts, we notice that a good empiric size is 100.
+Similarly to the previous phase, the size of the taboo list is a critical parameter. A large value would store a large number of forbidden couples timeslot, exam making the search of an available timeslot a difficult operation, while a small value would force a behavior similar to a steepest descent, which conduces to the exploration of local minimums. After several attempts, we notice that a good empiric size is 100.
 
 A mutation is an important but expensive operation in our algorithm. At the beginning, we tried to mutate every 1000 iterations but it was not effective because it would conduce to an exploration of a flat region. We reduced this parameter, realizing that a too little value would entail an unefficient exploration of the solution space and would slow down the execution. We found a good choice in |E|: this value is a trade-off between the mutation cost and a satisfying exploration.
 \paragraph*{Mutation}

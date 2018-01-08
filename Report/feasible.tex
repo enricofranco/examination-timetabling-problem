@@ -5,7 +5,7 @@ Our algorithm is composed by two main stages:
 \item Optimize the feasible solution found in the previous stage.
 \end{itemize}
 
-In order to improve the diversification of the algorithm and to explore as much as possible the solution space, we run several parallel threads and finally we choose the best of the provided solution.
+In order to improve the diversification of the algorithm and to explore as much as possible the solution space, we run several parallel threads and finally we choose the best of the provided solutions.
 
 \section*{Feasibile solution search}
 In our approach, we combine a greedy strategy with a taboo list which stores the ``bad'' couples timeslot, exam.
@@ -24,9 +24,9 @@ Hence, we start a loop that continues until all exams are correctly assigned. In
 \item If the number of unassigned exams is lower than the minimum number found so far, update it.
 \item If the number of conflicts is lower than the minimum number found so far, update it.
 \end{enumerate}
-The size of the taboo list is a critical parameter because a large value would store a large number of forbidden couples timeslot, exam making the timeslot choice a difficult operation, while a small value would force a behavior similar to a steepest descent, which conduces to an unfeasible solution. After several attempts, we notice that a good empiric size is 100.
+The size of the taboo list is a critical parameter. A large value would store a large number of forbidden couples timeslot, exam making the timeslot choice a difficult operation, while a small value would force a behavior similar to a steepest descent, which conduces to an unfeasible solution. After several attempts, we notice that a good empiric size is 100.
 
-A mutation is needed when it is difficult to improve the solution, i.e. flat region. In this case the procedure described before is not so effective and it is better to make some radical changes in the solution vector.
+A constant mutation frequency would enforce a strongly modification of an almost feasible solution into a worse one or it may mutate too low frequently. Hence, we adopted for a dynamic approach that changes the control value according to the quality of the current solution.
 \paragraph*{Mutation}
 For each taken exam:
 \begin{enumerate}
