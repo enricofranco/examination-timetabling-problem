@@ -389,9 +389,14 @@ public class Generator implements Runnable {
 			for (Exam exam : exams.values()) {
 				timeslotPosition = 0;
 				examId = exam.getId();
+				double prevDifference;
+				int timeSlotId = exam.getTimeSlot().getId();
+				
+				//Estimates the actual difference
+				prevDifference = estimateOF(timeSlotId, exam);
 				
 				//Searching of available slots
-				slotAvailable = searchFreeTimeslots(examId, exam);
+				slotAvailable = searchFreeTimeslots(examId, exam,prevDifference);
 				
 				if (slotAvailable) {
 					slotAvailable = false;
@@ -410,11 +415,7 @@ public class Generator implements Runnable {
 						}
 
 					}
-					double prevDifference;
-					int timeSlotId = exam.getTimeSlot().getId();
 					
-					//Estimates the actual difference
-					prevDifference = estimateOF(timeSlotId, exam);
 					
 					//Calculate the new OF
 					objectiveFunction = objectiveFunction + (-prevDifference + bestDifference) / S;
@@ -471,16 +472,18 @@ public class Generator implements Runnable {
 	 * @param exam - the exam which look for free timeslot
 	 * @return true if there are free timeslots, false otherwise.
 	 */
-	private boolean searchFreeTimeslots(int examId, Exam exam) {
+	private boolean searchFreeTimeslots(int examId, Exam exam,double prevDifference) {
 		boolean slotAvailable = false;
-		
+
 		for (int i = 0; i < T; i++) {/* Search all the free timeslots */
-			if (timeslotsArray[i].getNumberOfConflicts(examId) == 0
-					&& !optimizationTabooList.checkTaboo(timeslotsArray[i], exam)) {
+			if (timeslotsArray[i].getNumberOfConflicts(examId) == 0) {
+				double differenceOf = estimateOF(timeslotsArray[i].getId(), exam);
+				if(( !optimizationTabooList.checkTaboo(timeslotsArray[i], exam)||prevDifference>differenceOf)) {
 				slotAvailable = true;
 				timeslotAvailable[timeslotPosition] = timeslotsArray[i];
 				timeslotPosition++;
 			}
+		}
 		}
 		return slotAvailable;
 	}
