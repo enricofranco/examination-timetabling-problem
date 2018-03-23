@@ -9,7 +9,7 @@ The repository contains
 
 The strategy implemented does not exploit a standard heuristic or meta-heuristic algorithm. Insted, our algorithm adopts a mixed approach which exploits a taboo list paradigm with the concept of random mutation to escape from flat regions.
 Contributors, in alphabetic order:
-- @bubazzo
-- @franzonistefano
-- @Vooriden
-- @CapCandy
+- [Battagliotti Luca](https://github.com/bubazzo)
+- [Franzoni Stefano](https://github.com/franzonistefano)
+- [Gullino Emanuele](https://github.com/Vooriden)
+- [La Rocca Domenico](https://github.com/CapCandy)
